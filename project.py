@@ -17,7 +17,7 @@
 
 from flask import (Flask, render_template, request, session, request,
                    make_response, redirect,jsonify, url_for, flash)
-from sqlalchemy import create_engine, asc
+from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Item, Category, User
 from sqlalchemy.orm.exc import NoResultFound
@@ -53,15 +53,67 @@ FB_CLIENT_SECRETS_FILE = "fb_client_secrets.json"
 FB_APP_ID = json.loads(open(FB_CLIENT_SECRETS_FILE, 'r').read())['web']['app_id']
 FB_APP_SECRET = json.loads(open(FB_CLIENT_SECRETS_FILE, 'r').read())['web']['app_secret']
 
+# Views
+
+# @app.route("/login")
+# def login():
+#     return render_template("login.html")
+
 @app.route('/')
 def index():
     db = DBSession()
     categories = db.query(Category).all()
-    latest_items = db.query(Item).limit(5)
+    latest_items = db.query(Item).order_by(desc(Item.id)).limit(5)
 
     db.close()
 
     return render_template("public_index.html" , categories = categories, items = latest_items)
+
+
+@app.route('/catalog/<string:cat_name>/items')
+def view_category_items(cat_name):
+    db = DBSession()
+    category = None
+    items = None
+    try:
+        category = db.query(Category).filter_by(name = cat_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_404.html", cat_name = cat_name)
+
+    try:
+        items = db.query(Item).filter_by(cat_id = category.id)
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_empty.html", cat_name = cat_name)
+
+    db.close()
+
+    return render_template("public_category.html" , cat = category, items = items)
+
+
+@app.route('/catalog/<string:cat_name>/<string:item_name>')
+def view_item(cat_name, item_name):
+    db = DBSession()
+    category = None
+    item = None
+    try:
+        category = db.query(Category).filter_by(name = cat_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_404.html", cat_name = cat_name)
+
+    try:
+        item = db.query(Item).filter_by(cat_id = category.id, title = item_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/item_404.html", cat_name = cat_name, item_name = item_name)
+
+    author = db.query(User).filter_by(id = item.author_id).one()
+    db.close()
+
+    return render_template("public_item.html" , cat = category, item = item, author = author)
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

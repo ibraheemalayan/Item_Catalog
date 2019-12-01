@@ -1,0 +1,11 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+Hello LOLOLO Items in {{ cat.name }} <br>
+<ul>
+  {% for i in items %}
+  <li><a href="{{ url_for('view_item', cat_name = cat.name, item_name = i.title) }}">{{ i.title }} </a></li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

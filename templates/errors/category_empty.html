@@ -1,0 +1,9 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+
+<h1>Oops, Looks like the category with the name "{{ cat_name }}" has no items</h1>
+<h3><br> But you can fill it with yours <a href="#">Here</a></h3>
+<h6><br>*note that you have to be signed in first*</h6>
+
+{% endblock %}

@@ -1,17 +1,17 @@
 {% extends "main.html" %}
 {% block content %}
 {% include "header.html" %}
-Hello LOLOLO Items <br>
+<h2>Last 5 Items : </h2><br>
 <ul>
   {% for i in items %}
-  <li>{{i.title}}</li>
+  <li><a href="{{ url_for('view_item', cat_name = i.category.name, item_name = i.title) }}">{{i.title}}</a> ({{ i.category.name }})</li>
   {% endfor %}
 </ul>
 
-Hello LOLOLO cats <br>
+<h2>Categories :</h2><br>
 <ul>
   {% for cat in categories %}
-  <li>{{cat.name}}</li>
+  <li><a href="{{ url_for('view_category_items', cat_name = cat.name) }}">{{cat.name}}</a></li>
   {% endfor %}
 </ul>
 
