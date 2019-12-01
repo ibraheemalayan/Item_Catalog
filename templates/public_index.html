@@ -1,0 +1,19 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+Hello LOLOLO Items <br>
+<ul>
+  {% for i in items %}
+  <li>{{i.title}}</li>
+  {% endfor %}
+</ul>
+
+Hello LOLOLO cats <br>
+<ul>
+  {% for cat in categories %}
+  <li>{{cat.name}}</li>
+  {% endfor %}
+</ul>
+
+
+{% endblock %}
