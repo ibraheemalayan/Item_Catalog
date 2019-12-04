@@ -28,6 +28,7 @@ import flask
 import datetime
 import os
 import json
+import hashlib
 import requests
 
 app = Flask(__name__)
@@ -293,9 +294,54 @@ def login():
     response.set_cookie('state', state)
     return response
 
-@app.route("/ilogin", methods = ['POST'])
+@app.route("/internal_login", methods = ['POST'])
 def internal_login():
-    return render_template("login.html")
+
+    if 'signed' not in session:
+        session['signed'] = False
+    if session['signed']:
+        revoke()
+
+    # check login.html page state 
+
+    if 'Email' not in request.form or 'password' not in request.form:
+        response = make_response(json.dumps('Invalid form data.'), 406)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    email = request.form.get("Email")
+    password = request.form.get("password")
+
+    hasher = hashlib.sha256()
+    hasher.update(password.encode())
+    hashed_password = hasher.hexdigest()
+
+    db = DBSession()
+
+    user = None
+
+    # TODO instead of raw text , return an html file that contains an if statment to show sth for wrong passcode and another for .. and shows buttons to go back to login and to sign up
+
+    if not getUserID(email,db):
+        return '<h2> invalid email to retry click <a href="' + url_for('login') + '">here</a></h2>'
+
+    user = getUserDBInfo(getUserID(email,db), db)
+
+    if user.password_hash != hashed_password:
+         return '<h2> invalid password to retry click <a href="' + url_for('login') + '">here</a></h2>'
+
+     session['signed'] = True
+     session['provider'] = 'Internal'
+     user_data_dict = {
+                       'name'    : user.name ,
+                       'email'   : user.email ,
+                       'picture' : user.picture ,
+                       'id'      : user.id }
+
+     session['user_data_dict'] = user_data_dict
+
+     # save a cookie to the user sth unique to indicate that he is logged in and make a revoke internal function
+     return '<h2> Signed in successfully :-)</h2>'
 
 @app.route("/sign_up")
 def internal_sign_up():
