@@ -14,7 +14,7 @@
 # Follow PEP 8
 # check that you meet the requirements here > https://review.udacity.com/#!/rubrics/2008/view
 
-from flask import (Flask, render_template, request, session, request,
+from flask import (Flask, render_template, request, session, request, send_file,
                    make_response, redirect,jsonify, url_for, flash)
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
@@ -93,11 +93,87 @@ def getUserID(email,db):
         db.close()
         return None
 
+# Login Back-end Views FaceBook
+@app.route('/fbconnect', methods = ['POST'])
+def fbconnect():
 
-# Login Back-end Views
+    if 'signed' not in session:
+        session['signed'] = False
+    if session['signed']:
+        revoke()
 
+    if 'state' not in session or request.args.get('state') != session['state']:
+        response = make_response(json.dumps('Invalid state parameter.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    access_token = request.data
+
+    url = 'https://graph.facebook.com/oauth/access_token'
+
+    params = { 'grant_type': 'fb_exchange_token',
+               'client_id':            FB_APP_ID,
+               'client_secret':    FB_APP_SECRET,
+               'fb_exchange_token': access_token}
+
+    fb_creds = requests.get(url, params=params).json()
+
+    if 'error' in fb_creds:
+        response = make_response(json.dumps(' Error getting user credentials '), 401)
+        response.headers['Content-Type'] = 'application/json'
+        print('##### ERR > ' + str(fb_creds))
+        return response
+
+    user_info_url = 'https://graph.facebook.com/v5.0/me'
+
+    params = { 'grant_type': 'fb_exchange_token',
+               'access_token':      access_token,
+               'fields':  'id,name,picture,email'}
+
+
+    user_info = requests.get(user_info_url, params = params).json()
+
+    if 'error' in user_info:
+        response = make_response(json.dumps(' Error retreiving user info '), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # user_info Looks like:
+    #{ 'id': '2471506383107297',
+    #  'name': 'ibraheem alyan',
+    #  'picture': {
+    #     'data': {
+    #          'height': 50,
+    #          'is_silhouette': False,
+    #          'url': 'https://platform-lookaside.fbsbx.com/platform/profilepic/?asid=2471506383107297&height=50&width=50&ext=1577365910&hash=AeT_765TqTggaZY_',
+    #          'width': 50}},
+    #  'email': 'ibraheemalayan@gmail.com'}
+
+    user_info['picture'] = user_info['picture']['data']['url']
+
+    # Now user_info Looks like:
+    #{ 'id': '2471506383107297',
+    #  'name': 'إبراهيم عليان',
+    #  'picture': 'https://platform-lookaside.fbsbx.com/platform/profilepic/?asid=2471506383107297&height=50&width=50&ext=1577365910&hash=AeT_765TqTggaZY_',
+    #  'email': 'ibraheemalayan@gmail.com'}
+
+    session['user_data_dict'] = user_info
+    session['provider'] = 'Facebook'
+    session['fb_access_token'] = access_token
+    session['signed'] = True
+
+    user_db_id = getUserID(session['user_data_dict']['email'],DBSession())
+    if not user_db_id:
+        user_db_id = createUser(session,DBSession())
+    session['user_db_id'] = user_db_id
+
+    return redirect('/?flash=LS')
+
+# Login Back-end Views Google
+
+#TODO make this unreachable from the internet remove the app.route
 @app.route('/get_google_user_info')
 def get_google_user_info():
+    #TODO replace this by the is signed in and the is provider is google and if not redirect to google_authorize
     if 'google_credentials' not in session:
       return redirect('google_authorize')
 
@@ -210,15 +286,12 @@ def google_oauth2callback():
 
 @app.route("/login")
 def login():
-    return render_template("login.html")
-
-@app.route("/glogin")
-def google_login():
-    return redirect( url_for('google_authorize') )
-
-@app.route("/flogin")
-def facebook_login():
-    return render_template("login.html")
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in range(32))
+    session['state'] = state
+    response = make_response(render_template("login.html"))
+    response.set_cookie('state', state)
+    return response
 
 @app.route("/ilogin", methods = ['POST'])
 def internal_login():
@@ -229,6 +302,22 @@ def internal_sign_up():
     return render_template("login.html")
 
 # Revoking functions
+
+def revoke_fb(session, redirect_path):
+
+    access_token = session['fb_access_token']
+    url = 'https://graph.facebook.com/%s/permissions' % session['user_data_dict']['id']
+    params = { 'access_token' : access_token }
+    result = requests.delete(url, params = params)
+
+    del session['fb_access_token']
+    if 'user_data_dict' in session:
+        del session['user_data_dict']
+
+    session['provider'] = 'None'
+    session['signed'] = False
+
+    return redirect(redirect_path)
 
 def revoke_google(session, redirect_path):
     if 'google_credentials' not in session:
@@ -267,7 +356,7 @@ def revoke_google(session, redirect_path):
 def revoke():
 
     if not 'redirect_uri_post_revoke' in session:
-        redirect_path = '/'
+        redirect_path = '/?flash=SO'
     else:
         redirect_path = session['redirect_uri_post_revoke']
         del session['redirect_uri_post_revoke']
@@ -279,6 +368,8 @@ def revoke():
     if session['signed']:
         if session['provider'] == 'Google':
             return revoke_google(session, redirect_path)
+        elif session['provider'] == 'Facebook':
+            return revoke_fb(session, redirect_path)
     else:
         session['signed'] = False
         session['provider'] = 'None'
@@ -287,6 +378,29 @@ def revoke():
 
         return redirect( redirect_path )
 
+
+# Static files routers
+
+@app.route('/css/<string:path>')
+def get_css(path):
+    return send_file( ('templates\\css\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+
+@app.route('/js/<string:path>')
+def get_js(path):
+    return send_file( ('templates\\js\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+
+@app.route('/img/<string:path>')
+def get_img(path):
+    return send_file( ('templates\\img\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+#
+# @app.route('/webfonts/<string:path>')
+# def get_webfonts(path):
+#     return send_file( ('templates\\webfonts\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+#
+# @app.route('/fonts/<string:path>')
+# def get_fonts(path):
+#     return send_file( ('templates\\fonts\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+#
 
 # Views
 
