@@ -70,22 +70,27 @@ def createUser(login_session,db):
     db.add(newUser)
     db.commit()
     user = db.query(User).filter_by(email=login_session['email']).one()
+    db.close()
     return user.id
 
 
 def getUserDBInfo(user_id,db):
     try:
         user = db.query(User).filter_by(id=user_id).one()
+        db.close()
         return user
     except NoResultFound:
+        db.close()
         return None
 
 
 def getUserID(email,db):
     try:
         user = db.query(User).filter_by(email=email).one()
+        db.close()
         return user.id
     except:
+        db.close()
         return None
 
 
@@ -154,10 +159,11 @@ def get_google_user_info():
 
 @app.route('/google_authorize')
 def google_authorize():
+    if 'signed' not in session:
+        session['signed'] = False
     if session['signed']:
+        session['redirect_uri_post_revoke'] = '/google_authorize'
         return redirect('/revoke')
-        # TODO add a parameter to the revoke call to specify where to redirect after revoke
-        # TODO HERE call revoke with a redirect_uri as this function
 
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
@@ -176,7 +182,10 @@ def google_authorize():
 
 @app.route('/google_oauth2callback')
 def google_oauth2callback():
+    if 'signed' not in session:
+        session['signed'] = False
     if session['signed']:
+        session['redirect_uri_post_revoke'] = '/google_authorize'
         return redirect('/revoke')
 
     # Specify the state when creating the flow in the callback so that it can
@@ -221,9 +230,9 @@ def internal_sign_up():
 
 # Revoking functions
 
-def revoke_google(session):
+def revoke_google(session, redirect_path):
     if 'google_credentials' not in session:
-      return redirect( url_for('index') )
+      return redirect( redirect_path )
 
     credentials = google.oauth2.credentials.Credentials(
       **flask.session['google_credentials'])
@@ -236,31 +245,47 @@ def revoke_google(session):
     if status_code == 200:
 
         del session['google_credentials']
-        del session['user_data_dict']
+        if 'user_data_dict' in session:
+            del session['user_data_dict']
         session['signed'] = False
         session['provider'] = 'None'
 
-        return redirect('/?flash=SO')
+        return redirect( redirect_path )
     else:
         del session['google_credentials']
-        del session['user_data_dict']
+        if 'user_data_dict' in session:
+            del session['user_data_dict']
         session['signed'] = False
         session['provider'] = 'None'
 
-        return('<h1>An error occurred while revoking credentials.</h1>')
+        print('An error occurred while revoking credentials : ' + str(revoke.json()))
+
+        return redirect( redirect_path )
 
 
 @app.route('/revoke')
 def revoke():
+
+    if not 'redirect_uri_post_revoke' in session:
+        redirect_path = '/'
+    else:
+        redirect_path = session['redirect_uri_post_revoke']
+        del session['redirect_uri_post_revoke']
+
+    if 'signed' not in session:
+        session['signed'] = False
+    if 'provider' not in session:
+        session['provider'] = 'None'
     if session['signed']:
         if session['provider'] == 'Google':
-            return revoke_google(session)
+            return revoke_google(session, redirect_path)
     else:
         session['signed'] = False
         session['provider'] = 'None'
-        del session['user_data_dict']
+        if 'user_data_dict' in session:
+            del session['user_data_dict']
 
-        return redirect( url_for('index') )
+        return redirect( redirect_path )
 
 
 # Views
@@ -274,7 +299,13 @@ def index():
     db.close()
 
     if 'signed' not in session:
-        session['signed'] = None
+        session['signed'] = False
+
+    if session['signed']:
+        return render_template("logged_in_index.html" ,
+                               categories = categories,
+                               items = latest_items,
+                               user_dict = session["user_data_dict"])
 
     return render_template("public_index.html" , categories = categories, items = latest_items)
 
