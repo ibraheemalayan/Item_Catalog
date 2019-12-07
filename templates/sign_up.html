@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>sign up</title>
+  </head>
+  <body>
+    <h1>Welcome to our sign up form</h1>
+    <form class="sign_up" action="{{ url_for('internal_sign_up') }}" method="post">
+
+      <h4> Full Name :   <input type="text" name="name" value="" placeholder="your full name"></h4>
+      <h4> picture URL : <input type="url" name="pic_url" value="" placeholder="a url for your picture"></h4>
+      <h4> Email : <input type="email" name="email" value="" placeholder="your email"></h4>
+      <h4> Confirm Email : <input type="email" name="verify_email" value="" placeholder="confirm email"></h4>
+      <h4> Password : <input type="password" name="password" value="" placeholder="your password"></h4>
+      <h4> Confirm password : <input type="password" name="verify_password" value="" placeholder="confirm password"></h4>
+      <br><br><input type="submit" name="submit">
+
+    </form>
+  </body>
+</html>

@@ -302,14 +302,14 @@ def internal_login():
     if session['signed']:
         revoke()
 
-    # check login.html page state 
+    # TODO : check login.html page state
 
-    if 'Email' not in request.form or 'password' not in request.form:
+    if 'email' not in request.form or 'password' not in request.form:
         response = make_response(json.dumps('Invalid form data.'), 406)
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    email = request.form.get("Email")
+    email = request.form.get("email")
     password = request.form.get("password")
 
     hasher = hashlib.sha256()
@@ -345,7 +345,18 @@ def internal_login():
 
 @app.route("/sign_up")
 def internal_sign_up():
-    return render_template("login.html")
+    if request.method != 'POST':
+        return render_template("sign_up.html")
+
+    if not ( request.form and  'name'            in request.form and
+                           'pic_url'         in request.form and
+                           'email'           in request.form and
+                           'verify_email'    in request.form and
+                           'password'        in request.form and
+                           'verify_password' in request.form ) :
+
+
+    return render_template("sign_up.html")
 
 # Revoking functions
 
