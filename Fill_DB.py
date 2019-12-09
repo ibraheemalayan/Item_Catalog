@@ -43,7 +43,8 @@ user1 = User(
           id = 1,
           name = "Mary Hillfiger",
           email = "m.h123@sis.com",
-          password_hash = "2cb917e41feba38331cf2b7df8b6f5ea943f4bd65e873a12498748f4ee60ef47")
+          password_hash = "2cb917e41feba38331cf2b7df8b6f5ea943f4bd65e873a12498748f4ee60ef47",
+          picture = "https://picsum.photos/200/300")
 
 session.add(user1)
 session.commit()
@@ -53,7 +54,8 @@ user2 = User(
           id = 2,
           name = "Ibraheem Alyan",
           email = "ibraheemalayan@gmail.com",
-          password_hash = "274eee5b93f0746611cf725289ddfb5556014650d8991b647482b3fab7397a3b")
+          password_hash = "274eee5b93f0746611cf725289ddfb5556014650d8991b647482b3fab7397a3b",
+          picture = "https://picsum.photos/id/237/200/300")
 
 session.add(user2)
 session.commit()
@@ -63,7 +65,8 @@ user3 = User(
           id = 3,
           name = "Sami Ramadan",
           email = "sami.Rn@twio.edu",
-          password_hash = "ff09eb7c5620f1516b41c62b8e9c09c02c606c0d5ae68c0abcfda79f1726d416")
+          password_hash = "ff09eb7c5620f1516b41c62b8e9c09c02c606c0d5ae68c0abcfda79f1726d416",
+          picture = "https://picsum.photos/200")
 
 session.add(user3)
 session.commit()

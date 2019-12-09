@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 # TODO Checklist
-# implement the login with facebook and google and your own login
-# hash passwords
 # make a public page and logged_in page
-# make a function that returns true if user is signed in and false if not then use it in implementing the CRUD pages
 # make the json endpoints for every page on post methods
-# make a sign up form
-# make a login page that shows the 3 sign in ways
-# make a script that fills the database
 # make a README.md (copy it from logs analysis project)
 # documenate your code
 # style your templates
@@ -171,12 +165,14 @@ def fbconnect():
 
 # Login Back-end Views Google
 
-#TODO make this unreachable from the internet remove the app.route
 @app.route('/get_google_user_info')
 def get_google_user_info():
-    #TODO replace this by the is signed in and the is provider is google and if not redirect to google_authorize
-    if 'google_credentials' not in session:
-      return redirect('google_authorize')
+
+    if 'signed' in session and session['signed'] :
+        if session['provider'] == 'Google':
+            return redirect('google_authorize')
+        else:
+            return revoke('/get_google_user_info')
 
     # Load credentials from the session.
     credentials = google.oauth2.credentials.Credentials(
@@ -302,8 +298,6 @@ def internal_login():
     if session['signed']:
         revoke()
 
-    # TODO : check login.html page state
-
     if 'email' not in request.form or 'password' not in request.form:
         response = make_response(json.dumps('Invalid form data.'), 406)
         response.headers['Content-Type'] = 'application/json'
@@ -316,34 +310,30 @@ def internal_login():
     hasher.update(password.encode())
     hashed_password = hasher.hexdigest()
 
-    db = DBSession()
-
     user = None
 
-    # TODO instead of raw text , return an html file that contains an if statment to show sth for wrong passcode and another for .. and shows buttons to go back to login and to sign up
-
-    if not getUserID(email,db):
+    if not getUserID(email,DBSession()):
         return '<h2> invalid email to retry click <a href="' + url_for('login') + '">here</a></h2>'
 
-    user = getUserDBInfo(getUserID(email,db), db)
+    user = getUserDBInfo(getUserID(email,DBSession()), DBSession())
 
     if user.password_hash != hashed_password:
          return '<h2> invalid password to retry click <a href="' + url_for('login') + '">here</a></h2>'
 
-     session['signed'] = True
-     session['provider'] = 'Internal'
-     user_data_dict = {
+    session['signed'] = True
+    session['provider'] = 'Internal'
+    user_data_dict = {
                        'name'    : user.name ,
                        'email'   : user.email ,
                        'picture' : user.picture ,
                        'id'      : user.id }
 
-     session['user_data_dict'] = user_data_dict
+    session['user_data_dict'] = user_data_dict
 
-     # save a cookie to the user sth unique to indicate that he is logged in and make a revoke internal function
-     return '<h2> Signed in successfully :-)</h2>'
+    # save a cookie to the user sth unique to indicate that he is logged in and make a revoke internal function
+    return redirect( url_for('index') )
 
-@app.route("/sign_up")
+@app.route("/sign_up", methods = ['POST', 'GET'])
 def internal_sign_up():
     if request.method != 'POST':
         return render_template("sign_up.html")
@@ -354,9 +344,111 @@ def internal_sign_up():
                            'verify_email'    in request.form and
                            'password'        in request.form and
                            'verify_password' in request.form ) :
+        response = make_response(json.dumps('Invalid form data.'), 406)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    name            = request.form['name']
+    pic_url         = request.form['pic_url']
+    email           = request.form['email']
+    verify_email    = request.form['verify_email']
+    password        = request.form['password']
+    verify_password = request.form['verify_password']
+
+    if len(name) > 249:
+        statment = 'Name too long ,<a href="/sign_up">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(pic_url) > 499:
+        statment = 'picture URL too long <a href="'
+        statment += url_for('internal_sign_up')
+        statment += '" >Try again Here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if email != verify_email:
+        statment = 'Confirm email doesn\'t equal the first email <a href="'
+        statment += url_for('internal_sign_up')
+        statment += '" >Try again Here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(email) > 99:
+        statment = 'email too long <a href="'
+        statment += url_for('internal_sign_up')
+        statment += '" >Try again Here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if password != verify_password:
+        statment = 'Confirm password doesn\'t equal the first password <a href="'
+        statment += url_for('internal_sign_up')
+        statment += '" >Try again Here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(password) > 65:
+        statment = 'password too long <a href="'
+        statment += url_for('internal_sign_up')
+        statment += '" >Try again Here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(pic_url) < 10:
+        pic_url = 'http://cdn.onlinewebfonts.com/svg/img_513928.png'
+
+    user = None
+
+    hasher = hashlib.sha256()
+    hasher.update(password.encode())
+    hashed_password = hasher.hexdigest()
+
+    # if we fond an email with hashed password then there is an account for this email in our internal login system
+    # if we found an email without a password then this user has an account with google or facebook and we will create a internal account for him with the new password
+    if getUserID(email, DBSession()):
+        user_db_id = getUserID(email, DBSession())
+        user = getUserDBInfo(user_db_id, DBSession())
+        if user.password_hash and len(user.password_hash) > 0:
+            statment = 'this email already has an account and a password <a href="'
+            statment += url_for('internal_sign_up')
+            statment += '" >Try again Here</a> Or <a href="'
+            statment += url_for('login')
+            statment += '" >Log in Here</a>'
+            return render_template('sign_up_Err.html',statment = statment)
+
+        # here the user have an account but not with the internal login system (google or facebook)
+        # so if he is signed in we will save the password in the database with the user with the email
+        # but if not then we will send an error messeage showing that this email is associated with a user account but not in our log in system
+        # so if he is that user we will redirect him to the login form to sign with google or facebook and to fill the sign up form another time while he is signed
+
+        if 'signed' in session and session['signed'] and session['user_data_dict']['email'] == email:
+
+            user.password_hash = hashed_password
+
+            db = DBSession()
+
+            db.add(user)
+            db.commit()
+            db.close()
+
+            return redirect( url_for('login') )
+
+        statment = ('this email already has an account in this website <br>' +
+        ' but not in our internal login system (facebook or google) <br>' +
+        'if you want to create an account in our local system ' +
+        'please log in to your foreign account and try again <br>' +
+        '<a href="')
+        statment += url_for('internal_sign_up')
+        statment += '" >Try again Here</a> Or <a href="'
+        statment += url_for('login')
+        statment += '" >Log in Here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
 
 
-    return render_template("sign_up.html")
+    user = User(name = name, email = email, password_hash = hashed_password, picture = pic_url)
+
+    db = DBSession()
+
+    db.add(user)
+    db.commit()
+    db.close()
+
+    return redirect( url_for('login') )
 
 # Revoking functions
 
@@ -408,6 +500,15 @@ def revoke_google(session, redirect_path):
 
         return redirect( redirect_path )
 
+def revoke_internal(redirect_path):
+
+    if 'user_data_dict' in session:
+        del session['user_data_dict']
+    session['signed'] = False
+    session['provider'] = 'None'
+
+    return redirect( redirect_path )
+
 
 @app.route('/revoke')
 def revoke():
@@ -427,6 +528,8 @@ def revoke():
             return revoke_google(session, redirect_path)
         elif session['provider'] == 'Facebook':
             return revoke_fb(session, redirect_path)
+        else:
+            return revoke_internal(redirect_path)
     else:
         session['signed'] = False
         session['provider'] = 'None'

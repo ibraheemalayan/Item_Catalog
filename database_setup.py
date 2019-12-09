@@ -10,9 +10,9 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
-    picture = Column(String(250))
+    picture = Column(String(500))
     email = Column(String(100), nullable=False)
-    password_hash = Column(String(100))
+    password_hash = Column(String(65))
 
     @property
     def serialize(self):
