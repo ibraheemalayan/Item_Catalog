@@ -1,0 +1,47 @@
+{% extends "main.html" %}
+{% block content %}
+
+		<!-- section -->
+		<div class="section">
+
+			<!-- /container -->
+		</div>
+		<!-- /section -->
+
+		<!-- section -->
+		<div class="section section-grey">
+			<!-- container -->
+			<div class="container">
+				<!-- row -->
+				<div class="row">
+					<div class="col-md-12">
+						<div class="section-title text-center">
+							<h2>Featured Items</h2>
+						</div>
+					</div>
+
+					{% for i in items %}
+
+					<!-- post -->
+					<div class="col-md-4">
+						<div class="post">
+							<div class="post-body">
+								<div class="post-meta">
+									<a class="post-category cat-{{ ((i.category.id + 2 ) % 4) + 1 }}" href="{{ '/catalog/' + i.category.name + '/items' }}">{{ i.category.name }}</a>
+								</div>
+								<h3 class="post-title"><a href="{{ '/catalog/' + i.category.name + '/' + i.title }}"> {{ i.title }} </a></h3>
+							</div>
+						</div>
+					</div>
+					<!-- /post -->
+
+					{% endfor %}
+
+				</div>
+				<!-- /row -->
+			</div>
+			<!-- /container -->
+		</div>
+		<!-- /section -->
+
+{% endblock %}

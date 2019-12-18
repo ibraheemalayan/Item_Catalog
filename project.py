@@ -58,34 +58,40 @@ def credentials_to_dict(credentials):
             'scopes': credentials.scopes}
 
 # User Helper Functions
-def createUser(login_session,db):
+def createUser(login_session,db,close_db = True):
     newUser = User(name=login_session['user_data_dict']['name'],
                    email=login_session['user_data_dict']['email'],
                    picture=login_session['user_data_dict']['picture'])
     db.add(newUser)
     db.commit()
-    user = db.query(User).filter_by(email=login_session['email']).one()
-    db.close()
+    user = db.query(User).filter_by(email=login_session['user_data_dict']['email']).one()
+    if close_db:
+        db.close()
     return user.id
 
 
-def getUserDBInfo(user_id,db):
+def getUserDBInfo(user_id,db,close_db = True):
+
     try:
         user = db.query(User).filter_by(id=user_id).one()
-        db.close()
+        if close_db:
+            db.close()
         return user
     except NoResultFound:
-        db.close()
+        if close_db:
+            db.close()
         return None
 
 
-def getUserID(email,db):
+def getUserID(email,db,close_db = True):
     try:
         user = db.query(User).filter_by(email=email).one()
-        db.close()
+        if close_db:
+            db.close()
         return user.id
     except:
-        db.close()
+        if close_db:
+            db.close()
         return None
 
 # Login Back-end Views FaceBook
@@ -290,6 +296,94 @@ def login():
     response.set_cookie('state', state)
     return response
 
+@app.route("/password-recovery")
+def password_recovery():
+    return render_template('password_rec_email.html')
+
+@app.route("/password-recovery-security-question", methods=['POST'])
+def validate_recovery_email():
+
+    if 'email' not in request.form:
+        response = make_response(json.dumps('Invalid form data.'), 406)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    email = request.form['email']
+
+    db = DBSession()
+
+    if not getUserID(email, db, False):
+        statment = 'invalid email ,<a href="/login" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    user = getUserDBInfo(getUserID(email, db, False), db, False)
+
+    db.close()
+
+    return render_template('password_rec.html',email=user.email, sec_q=user.sec_q)
+
+
+@app.route("/pr/<string:email>", methods=['POST'])
+def update_password(email):
+
+    if 'signed' not in session:
+        session['signed'] = False
+    if session['signed']:
+        revoke()
+
+
+    if not email or 'sec_a' not in request.form or 'n_password' not in request.form:
+        response = make_response(json.dumps('Invalid form data.'), 406)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    sec_a = request.form['sec_a']
+    new_password = request.form['n_password']
+
+#TODO validate passwords (see online ready libs) or just validate the lenght
+    if len(new_password) < 1:
+        statment = 'empty password ,<a href="/login" style="font-size:39px">go to login page</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(password) > 65:
+        statment = 'password too long ,<a href="/sign_up" style="font-size:39px">go to login page</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(password) < 8:
+        statment = 'password too short ,<a href="/sign_up" style="font-size:39px">go to login page</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+    db = DBSession()
+
+    if not getUserID(email, db, False):
+        statment = 'invalid email ,<a href="/login" style="font-size:39px">go to login page</a>'
+        db.close()
+        return render_template('sign_up_Err.html',statment = statment)
+
+#TODO make those calls like this
+    user = getUserDBInfo(getUserID(email, db, False), db, False)
+
+    if user.sec_a == sec_a:
+
+        hasher = hashlib.sha256()
+        hasher.update(new_password.encode())
+        user.password_hash = hasher.hexdigest()
+
+        db.add(user)
+        db.commit()
+
+        db.close()
+        statment = 'Password was updated ,<a href="/login" style="font-size:39px">Login here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    db.close()
+    statment = 'Security answer is incorrect,<a href="/login" style="font-size:39px">Try Logging in again</a>'
+    return render_template('sign_up_Err.html',statment = statment)
+
+#TODO Limit user requests per minute
+#TODO clean the styles.css
+#TODO Add buttons and forms to create update delete items and categories
+
+
 @app.route("/internal_login", methods = ['POST'])
 def internal_login():
 
@@ -306,19 +400,39 @@ def internal_login():
     email = request.form.get("email")
     password = request.form.get("password")
 
+    if len(email) < 1:
+        statment = 'Please enter an email ,<a href="/login" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    user = None
+
+    #
+    if not getUserID(email,DBSession()):
+        statment = 'invalid email ,<a href="/login" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    user = getUserDBInfo(getUserID(email,DBSession()), DBSession())
+
+    if not user.password_hash :
+        statment = ('This email is not in our internal login system .<br><br>' +
+        'it has a foreign account<br>(facebook or google), <br>' +
+        '<a href="/login" style="font-size:39px">Try again here</a> '+
+        '<br>Or<br> head to ' +
+        '<a href="/sign_up" style="font-size:39px">Sign up Form</a>' +
+        ' to create an internal account')
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(password) < 1:
+        statment = 'Please enter a password ,<a href="/login" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
     hasher = hashlib.sha256()
     hasher.update(password.encode())
     hashed_password = hasher.hexdigest()
 
-    user = None
-
-    if not getUserID(email,DBSession()):
-        return '<h2> invalid email to retry click <a href="' + url_for('login') + '">here</a></h2>'
-
-    user = getUserDBInfo(getUserID(email,DBSession()), DBSession())
-
     if user.password_hash != hashed_password:
-         return '<h2> invalid password to retry click <a href="' + url_for('login') + '">here</a></h2>'
+         statment = 'incorrect password ,<a href="/login" style="font-size:39px">Try again here</a>'
+         return render_template('sign_up_Err.html',statment = statment)
 
     session['signed'] = True
     session['provider'] = 'Internal'
@@ -343,7 +457,9 @@ def internal_sign_up():
                            'email'           in request.form and
                            'verify_email'    in request.form and
                            'password'        in request.form and
-                           'verify_password' in request.form ) :
+                           'verify_password' in request.form and
+                           'sec_q'           in request.form and
+                           'sec_a'           in request.form ) :
         response = make_response(json.dumps('Invalid form data.'), 406)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -354,39 +470,71 @@ def internal_sign_up():
     verify_email    = request.form['verify_email']
     password        = request.form['password']
     verify_password = request.form['verify_password']
+    sec_q           = request.form['sec_q']
+    sec_a           = request.form['sec_a']
+
+    if len(name) < 1:
+        statment = 'Please enter a name ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(email) < 1:
+        statment = 'Please enter an email ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(verify_email) < 1:
+        statment = 'Please confirm your email ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(password) < 1:
+        statment = 'Please enter a password ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(verify_password) < 1:
+        statment = 'Please confirm your password ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(sec_q) < 1:
+        statment = 'Please enter a security question ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(sec_a) < 1:
+        statment = 'Please enter an answer for the security question ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
 
     if len(name) > 249:
-        statment = 'Name too long ,<a href="/sign_up">Try again here</a>'
+        statment = 'Name too long ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
         return render_template('sign_up_Err.html',statment = statment)
 
     if len(pic_url) > 499:
-        statment = 'picture URL too long <a href="'
-        statment += url_for('internal_sign_up')
-        statment += '" >Try again Here</a>'
+        statment = 'picture URL too long ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
         return render_template('sign_up_Err.html',statment = statment)
 
     if email != verify_email:
-        statment = 'Confirm email doesn\'t equal the first email <a href="'
-        statment += url_for('internal_sign_up')
-        statment += '" >Try again Here</a>'
+        statment = 'Confirm email doesn\'t equal the first email ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
         return render_template('sign_up_Err.html',statment = statment)
 
     if len(email) > 99:
-        statment = 'email too long <a href="'
-        statment += url_for('internal_sign_up')
-        statment += '" >Try again Here</a>'
-        return render_template('sign_up_Err.html',statment = statment)
-
-    if password != verify_password:
-        statment = 'Confirm password doesn\'t equal the first password <a href="'
-        statment += url_for('internal_sign_up')
-        statment += '" >Try again Here</a>'
+        statment = 'email too long <a href="/sign_up" style="font-size:39px">Try again here</a>'
         return render_template('sign_up_Err.html',statment = statment)
 
     if len(password) > 65:
-        statment = 'password too long <a href="'
-        statment += url_for('internal_sign_up')
-        statment += '" >Try again Here</a>'
+        statment = 'password too long ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(password) < 8:
+        statment = 'password too short ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if password != verify_password:
+        statment = 'Confirm password doesn\'t equal the first password ,<a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(sec_q) > 99:
+        statment = 'security question is too long <a href="/sign_up" style="font-size:39px">Try again here</a>'
+        return render_template('sign_up_Err.html',statment = statment)
+
+    if len(sec_a) > 99:
+        statment = 'security question answer is too long <a href="/sign_up" style="font-size:39px">Try again here</a>'
         return render_template('sign_up_Err.html',statment = statment)
 
     if len(pic_url) < 10:
@@ -404,11 +552,7 @@ def internal_sign_up():
         user_db_id = getUserID(email, DBSession())
         user = getUserDBInfo(user_db_id, DBSession())
         if user.password_hash and len(user.password_hash) > 0:
-            statment = 'this email already has an account and a password <a href="'
-            statment += url_for('internal_sign_up')
-            statment += '" >Try again Here</a> Or <a href="'
-            statment += url_for('login')
-            statment += '" >Log in Here</a>'
+            statment = 'this email already has an account and a password ,<a href="/sign_up" style="font-size:39px">Try again here</a> Or <a href="/login" style="font-size:39px">Log in here</a>'
             return render_template('sign_up_Err.html',statment = statment)
 
         # here the user have an account but not with the internal login system (google or facebook)
@@ -431,16 +575,15 @@ def internal_sign_up():
         statment = ('this email already has an account in this website <br>' +
         ' but not in our internal login system (facebook or google) <br>' +
         'if you want to create an account in our local system ' +
-        'please log in to your foreign account and try again <br>' +
-        '<a href="')
-        statment += url_for('internal_sign_up')
-        statment += '" >Try again Here</a> Or <a href="'
-        statment += url_for('login')
-        statment += '" >Log in Here</a>'
+        'please log in to your foreign account and go back to this link <br>' +
+        '( <a href="https://localhost:5000/sign_up" style="font-size:39px">' +
+        'https://localhost:5000/sign_up</a> ) while you are logged in <br>' +
+        ',<a href="/sign_up" style="font-size:39px">Try again here</a>' +
+        ' Or <a href="/login" style="font-size:39px">Log in here</a>')
         return render_template('sign_up_Err.html',statment = statment)
 
 
-    user = User(name = name, email = email, password_hash = hashed_password, picture = pic_url)
+    user = User(name = name, email = email, password_hash = hashed_password, picture = pic_url, sec_q = sec_q, sec_a = sec_a)
 
     db = DBSession()
 
@@ -543,16 +686,36 @@ def revoke():
 
 @app.route('/css/<string:path>')
 def get_css(path):
-    return send_file( ('templates\\css\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+    try:
+        return send_file( ('templates\\css\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+    except FileNotFoundError:
+        return make_response("FileNotFoundError",404)
+
 
 @app.route('/js/<string:path>')
 def get_js(path):
-    return send_file( ('templates\\js\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+    try:
+        return send_file( ('templates\\js\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+    except FileNotFoundError:
+        return make_response("FileNotFoundError",404)
+
 
 @app.route('/img/<string:path>')
 def get_img(path):
-    return send_file( ('templates\\img\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
-#
+    try:
+        return send_file( ('templates\\img\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+    except FileNotFoundError as e:
+        print(e)
+        return make_response("FileNotFoundError",404)
+
+
+@app.route('/fonts/<string:path>')
+def get_fonts(path):
+    try:
+        return send_file( ('templates\\fonts\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
+    except FileNotFoundError:
+        return make_response("FileNotFoundError",404)
+
 # @app.route('/webfonts/<string:path>')
 # def get_webfonts(path):
 #     return send_file( ('templates\\webfonts\\' + str(path).replace('/', '\\')), cache_timeout=-1 )
@@ -564,11 +727,13 @@ def get_img(path):
 
 # Views
 
+# the website homepage
 @app.route('/')
 def index():
     db = DBSession()
-    categories = db.query(Category).all()
-    latest_items = db.query(Item).order_by(desc(Item.id)).limit(5)
+    categories = db.query(Category)
+    top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+    latest_items = db.query(Item).order_by(desc(Item.id)).limit(9)
 
     db.close()
 
@@ -576,17 +741,25 @@ def index():
         session['signed'] = False
 
     if session['signed']:
-        return render_template("logged_in_index.html" ,
+        return render_template("index.html" ,
                                categories = categories,
                                items = latest_items,
+                               top_categories = top_categories,
                                user_dict = session["user_data_dict"])
 
-    return render_template("public_index.html" , categories = categories, items = latest_items)
+    return render_template("index.html" ,
+                            categories = categories,
+                            items = latest_items,
+                            top_categories = top_categories)
 
 
 @app.route('/catalog/<string:cat_name>/items')
 def view_category_items(cat_name):
     db = DBSession()
+
+    top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+    categories = db.query(Category)
+
     category = None
     items = None
     try:
@@ -603,12 +776,18 @@ def view_category_items(cat_name):
 
     db.close()
 
-    return render_template("public_category.html" , cat = category, items = items)
+    return render_template("category.html",
+                           items = items,
+                           categories = categories,
+                           top_categories = top_categories,
+                           category = category)
 
 
 @app.route('/catalog/<string:cat_name>/<string:item_name>')
 def view_item(cat_name, item_name):
     db = DBSession()
+    top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+    categories = db.query(Category)
     category = None
     item = None
     try:
@@ -626,7 +805,11 @@ def view_item(cat_name, item_name):
     author = db.query(User).filter_by(id = item.author_id).one()
     db.close()
 
-    return render_template("public_item.html" , cat = category, item = item, author = author)
+    return render_template("item.html",
+                           item = item,
+                           category = category,
+                           categories = categories,
+                           top_categories = top_categories)
 
 
 if __name__ == '__main__':

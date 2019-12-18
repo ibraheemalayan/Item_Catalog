@@ -1,0 +1,47 @@
+{% extends "main.html" %}
+{% block content %}
+
+<!-- section -->
+<div class="page-header" style="margin-top:40px">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-10">
+        <ul class="page-header-breadcrumb">
+          <li><a href="https://localhost:5000/">Home</a></li>
+          <li>{{ category.name }}</li>
+        </ul>
+        <h1 class="cat-{{ ((category.id + 2 ) % 4) + 1 }}-title">{{ item.title }}</h1>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /section -->
+
+<!-- white section -->
+<div class="section">
+</div>
+<!-- /white section -->
+
+<!-- section -->
+<div class="section section-grey">
+  <!-- container -->
+  <div class="container">
+    <!-- row -->
+    <div class="row">
+      <!-- post -->
+      <div class="col-md-4">
+        <div class="post">
+          <div class="post-body">
+            <h3 class="post-title">{{ item.description }}</h3>
+          </div>
+        </div>
+      </div>
+      <!-- /post -->
+    </div>
+    <!-- /row -->
+  </div>
+  <!-- /container -->
+</div>
+<!-- /section -->
+
+{% endblock %}

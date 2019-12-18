@@ -13,6 +13,8 @@ class User(Base):
     picture = Column(String(500))
     email = Column(String(100), nullable=False)
     password_hash = Column(String(65))
+    sec_q = Column(String(100))
+    sec_a = Column(String(100))
 
     @property
     def serialize(self):

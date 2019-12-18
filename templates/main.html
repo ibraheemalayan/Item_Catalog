@@ -1,14 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<link href='https://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
-		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-		<!-- <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}"> -->
-	</head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>Item Cataolg</title>
+
+		<!-- Google font -->
+		<link href="https://fonts.googleapis.com/css?family=Nunito+Sans:700%7CNunito:300,600" rel="stylesheet">
+
+		<!-- Bootstrap -->
+		<link type="text/css" rel="stylesheet" href="https://localhost:5000/css/bootstrap.min.css"/>
+
+		<!-- Font Awesome Icon -->
+		<link rel="stylesheet" href="https://localhost:5000/css/font-awesome.min.css">
+
+		<!-- Custom stlylesheet -->
+		<link type="text/css" rel="stylesheet" href="https://localhost:5000/css/style.css"/>
+
+    </head>
 	<body>
-		<div class="container">
-			{% block content %}
-			{% endblock %}
+
+		<!-- Header -->
+		<header id="header">
+			<!-- Nav -->
+			<div id="nav">
+				<!-- Main Nav -->
+				<div id="nav-fixed">
+					<div class="container">
+
+						<!-- nav -->
+						<ul class="nav-menu nav navbar-nav">
+							<li><a href="https://localhost:5000/">Home</a></li>
+							<li id="sep"> Hottest <br> Categories </li>
+							{% for c in top_categories %}
+							<li class="cat-{{ ((c.id + 2 ) % 4) + 1 }}"><a href="{{ '/catalog/' + c.name + '/items' }}">{{ c.name }}</a></li>
+							{% endfor %}
+              {% if not user_dict %}
+              <li><a href="{{ url_for('internal_sign_up') }}" class="btn green" style="padding:12px 15px 12px 15px;">Sign up</a></li>
+              <li><a href="{{ url_for('login') }}" class="btn red" style="padding:12px 15px 12px 15px;margin-left:20px">Log in</a></li>
+              {% else %}
+              <li><a href="{{ url_for('revoke') }}" class="btn red" style="padding: 12px 15px 12px 15px;">Sign out</a></li>
+							<li><img src="{{ user_dict['picture'] }}" id="profile_img"></li>
+              {% endif %}
+
+            </ul>
+						<!-- /nav -->
+
+					</div>
+				</div>
+				<!-- /Main Nav -->
+			</div>
+			<!-- /Nav -->
+		</header>
+		<!-- /Header -->
+
+    {% block content %}
+    {% endblock %}
+
+		<div class="section">
+			<!-- container -->
+			<div class="container">
+				<!-- row -->
+				<div class="row">
+					<div class="col-md-12">
+						<div class="section-title text-center">
+							<h2>Categories</h2>
+						</div>
+					</div>
+
+					{% for c in categories %}
+
+					<!-- post -->
+					<div class="col-md-4">
+						<div class="post">
+							<div class="post-body">
+								<div class="post-meta">
+									<a class="post-category cat-{{ ((c.id + 2 ) % 4) + 1 }}" href="{{ '/catalog/' + c.name + '/items' }}">{{ c.name }}</a>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- /post -->
+
+					{% endfor %}
+
+				</div>
+				<!-- /row -->
+			</div>
+			<!-- /container -->
 		</div>
+
+    <!-- Footer -->
+		<footer id="footer">
+			<!-- container -->
+			<div class="container">
+				<!-- row -->
+							<ul class="footer-nav">
+								<li><a href="https://localhost:5000/" style="font-size:40px;font-weight:bold;font-style:italic;color:#34118f;text-decoration:underline;">Item Cataolg</a></li>
+							</ul>
+							<div class="post-body">
+								This Website was made by Ibraheem Alyan
+							</div>
+						</div>
+
+
+		</footer>
+		<!-- /Footer -->
 	</body>
 </html>

@@ -1,30 +1,82 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>Login</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="{{ url_for('index') + "js/FB_Login_Script.js" }}" charset="utf-8"></script>
-  </head>
-  <body>
-    <h1> Login to Item catalog</h1><br>
-    <h3> with those platforms </h3>
-    <ul>
-      <li><h4><a href="{{ url_for('google_authorize') }}"> Sign in with google </a></h4></li>
-      <li><fb:login-button scope="public_profile,email" onlogin="checkLoginState();">
-      </fb:login-button></li>
+<html lang="en">
+<head>
+	<title>Login</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--===============================================================================================-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://localhost:5000/js/FB_Login_Script.js" charset="utf-8" defer></script>
+	<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="https://localhost:5000/css/login_util.css">
+	<link rel="stylesheet" type="text/css" href="https://localhost:5000/css/login_style.css">
+</head>
+<body>
+	<div class="limiter">
+		<div class="container-login100" style="background-image: url('https://localhost:5000/img/bg-02.jpg');">
+			<div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
+				<form class="login100-form validate-form flex-sb flex-w" action="{{ url_for('internal_login') }}" method="post">
+					<span class="login100-form-title p-b-53">
+						Sign In With
+					</span>
 
-      <div id="status">
-      </div>
-    </ul>
-    <h3> OR </h3>
-    <form class="login_form" action="{{ url_for('internal_login') }}" method="post">
-      <input type="email" name="email" placeholder="enter your email"><br>
-      <input type="password" name="password" placeholder="enter your password"><br>
-      <input type="submit" name="Submit">
-    </form>
-    <h5>if you don't have an account in any of the above go <a href="{{ url_for('internal_sign_up') }}">sign up</a></h5>
+					<a id="fb-root" href="#" onclick="fb_login();" class="btn-face m-b-20" style="text-decoration:none">
+						<img src="https://localhost:5000/img/facebook-icon.png" alt="FaceBook" width=50px style="margin-right:15px">
+						Facebook
+					</a>
 
+					<a href="{{ url_for('google_authorize') }}" class="btn-google m-b-20" style="text-decoration:none">
+						<img src="https://localhost:5000/img/icon-google.png" alt="GOOGLE">
+						Google
+					</a>
 
-  </body>
+					<span class="login100-form-title">
+						OR
+					</span>
+
+					<div class="p-b-9">
+						<span class="txt1">
+							Email
+						</span>
+					</div>
+					<div class="wrap-input100 validate-input" data-validate = "Username is required">
+						<input class="input100" type="email" name="email" >
+						<span class="focus-input100"></span>
+					</div>
+
+					<div class="p-t-13 p-b-9">
+						<span class="txt1">
+							Password
+						</span>
+
+						<a href="{{url_for('password_recovery')}}" class="txt2 bo1 m-l-5" style="text-decoration:none">
+							Forgot?
+						</a>
+					</div>
+					<div class="wrap-input100 validate-input" data-validate = "Password is required">
+						<input class="input100" type="password" name="password" >
+						<span class="focus-input100"></span>
+					</div>
+
+					<div class="container-login100-form-btn m-t-17">
+						<button class="login100-form-btn">
+							Sign In
+						</button>
+					</div>
+
+					<div class="w-full text-center p-t-55">
+						<span class="txt2">
+							Not a member?
+						</span>
+
+						<a href="{{ url_for('internal_sign_up') }}" class="txt2 bo1" style="text-decoration:none">
+							Sign up now
+						</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+</body>
 </html>
