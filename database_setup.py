@@ -49,7 +49,7 @@ class Item(Base):
     author_id = Column(Integer, ForeignKey('user.id'))
     author = relationship(User)
     cat_id = Column(Integer, ForeignKey('category.id'))
-    category = relationship(Category)
+    category = relationship(Category, cascade="all, delete-orphan", single_parent=True)
 
     @property
     def serialize(self):
@@ -64,7 +64,7 @@ class Item(Base):
 
 
 
-engine = create_engine('sqlite:///Item_Cataolg.db')
+engine = create_engine('sqlite:///Item_Catalog.db')
 
 
 Base.metadata.create_all(engine)

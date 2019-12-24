@@ -27,7 +27,7 @@ import requests
 app = Flask(__name__)
 
 #Connect to Database and create database sessionmaker (DBSession)
-engine = create_engine('sqlite:///Item_Cataolg.db')
+engine = create_engine('sqlite:///Item_Catalog.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -905,6 +905,7 @@ def get_fonts(path):
 #______________________________ Start index view ______________________________#
 
 @app.route('/')
+@app.route('/index')
 def index():
 
     db = DBSession()
@@ -962,10 +963,26 @@ def view_category_items(cat_name):
 
     db.close()
 
+    if 'signed' not in session:
+        session['signed'] = False
+
+    if session['signed']:
+        # renders the HTML template with the data
+        return render_template("category.html",
+                               items = items,
+                               categories = categories,
+                               delete_url = (str(request.path)[:-6] + "/delete"),
+                               edit_url = (str(request.path) + "/edit"),
+                               top_categories = top_categories,
+                               category = category,
+                               user_dict = session["user_data_dict"])
+
     # renders the HTML template with the data
     return render_template("category.html",
                            items = items,
                            categories = categories,
+                           delete_url = (str(request.path)[:-6] + "/delete"),
+                           edit_url = (str(request.path) + "/edit"),
                            top_categories = top_categories,
                            category = category)
 
@@ -999,15 +1016,145 @@ def view_item(cat_name, item_name):
     author = db.query(User).filter_by(id = item.author_id).one()
     db.close()
 
+    if 'signed' not in session:
+        session['signed'] = False
+
+    if session['signed']:
+        return render_template("item.html",
+                               item = item,
+                               category = category,
+                               delete_url = (str(request.path) + "/delete"),
+                               edit_url = (str(request.path) + "/edit"),
+                               categories = categories,
+                               top_categories = top_categories,
+                               user_data_dict = session['user_data_dict'])
+
     return render_template("item.html",
                            item = item,
                            category = category,
+                           delete_url = (str(request.path) + "/delete"),
+                           edit_url = (str(request.path) + "/edit"),
                            categories = categories,
                            top_categories = top_categories)
 
 
 #_______________________________ End READ views _______________________________#
 #_____________________________ Start DELELTE views ____________________________#
+#TODO complete those CRUD opreations
+
+@app.route("/catalog/<string:cat_name>/<string:item_name>/delete/<int:confirm>")
+@app.route("/catalog/<string:cat_name>/<string:item_name>/delete")
+def delete_item(cat_name, item_name, confirm = 0):
+
+    if 'signed' not in session or not session['signed']:
+        statment = ('Please log in first ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    db = DBSession()
+
+    # retreive the required data from the database
+    top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+    categories = db.query(Category)
+
+    category = None
+    item = None
+    try:
+        category = db.query(Category).filter_by(name = cat_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_404.html", cat_name = cat_name)
+
+    try:
+        item = db.query(Item).filter_by(
+                                cat_id = category.id, title = item_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/item_404.html",
+                                cat_name = cat_name,
+                                item_name = item_name)
+
+    author = db.query(User).filter_by(id = item.author_id).one()
+
+    # check if the user is the item's author ,if not
+    # then he is not allowed to delete
+
+    if session['user_data_dict']['email'] != author.email :
+        statment = ('Only the item owner can delete it ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        db.close()
+        return  render_template('status_message.html',statment = statment)
+
+
+    if confirm == 0:
+        statment = 'Please confirm that you want to delete the item "'
+        statment += item.title + '"'
+        db.close()
+        return render_template( 'confirm.html',
+                                statment = statment,
+                                confirm_url = (str(request.path) + "/1"),
+                                categories = categories,
+                                top_categories = top_categories )
+
+    db.delete(item)
+    db.commit()
+    db.close()
+
+    statment = ('The item was deleted successfully ,' +
+        '<a href="/index" style="font-size:39px">Home page here</a>')
+    return  render_template('status_message.html',statment = statment)
+
+# DELETE Category
+@app.route("/catalog/<string:cat_name>/delete/<int:confirm>")
+@app.route("/catalog/<string:cat_name>/delete")
+def delete_category(cat_name, confirm = 0):
+
+    if 'signed' not in session or not session['signed']:
+        statment = ('Please log in first ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    db = DBSession()
+
+    # retreive the required data from the database
+    top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+    categories = db.query(Category)
+
+    category = None
+    items = None
+    try:
+        category = db.query(Category).filter_by(name = cat_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_404.html", cat_name = cat_name)
+    try:
+        items = db.query(Item).filter_by(cat_id = category.id)
+    except NoResultFound:
+        pass
+
+    if confirm == 0:
+        statment = 'Please confirm that you want to delete the category " <font color = "#008eff">'
+        statment += category.name + '</font> "'
+        db.close()
+        return render_template( 'confirm.html',
+                                statment = statment,
+                                confirm_url = (str(request.path) + "/1"),
+                                categories = categories,
+                                top_categories = top_categories )
+
+    for i in items:
+        db.delete(i)
+
+    db.delete(category)
+    db.commit()
+    db.close()
+
+    statment = ('The category was deleted successfully ,' +
+        '<a href="/index" style="font-size:39px">Home page here</a>')
+    return  render_template('status_message.html',statment = statment)
+
+#_____________________________ Start DELELTE views ____________________________#
+
 
 #______________________________________________________________________________#
 ############################ End main and CRUD views ###########################
