@@ -13,12 +13,12 @@
 			<!-- container -->
 			<div class="container">
 				<!-- row -->
-				<div class="row">
+				<div class="row" style="width: 950px;padding-left: 250px;">
 
-          <h1>{{ statment|safe }}</h1>
+          <h1 style="margin-bottom:40px">{{ statment|safe }}</h1>
 
-          <button type="button" name="confirm_button"><a href="{{ confirm_url }}"> Confirm </a></button>
-          <button type="button" name="cancel_button"><a href="{{ url_for('index') }}"> Cancel </a></button>
+          <button class="submit_btn" type="button" name="confirm_button"><a href="{{ confirm_url }}"> Confirm </a></button>
+          <button class="cancel_btn" type="button" name="cancel_button"><a href="{{ url_for('index') }}"> Cancel </a></button>
 
 				</div>
 				<!-- /row -->

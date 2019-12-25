@@ -465,7 +465,6 @@ def update_password(email):
 
 #TODO Limit user requests per minute
 #TODO clean the styles.css
-#TODO Add buttons and forms to create update delete items and categories
 
 # receives post request from the main login page
 @app.route("/internal_login", methods = ['POST'])
@@ -981,7 +980,7 @@ def view_category_items(cat_name):
                            items = items,
                            categories = categories,
                            delete_url = (str(request.path)[:-6] + "/delete"),
-                           edit_url = (str(request.path) + "/edit"),
+                           edit_url     = (str(request.path) + "/edit"),
                            top_categories = top_categories,
                            category = category)
 
@@ -1025,6 +1024,7 @@ def view_item(cat_name, item_name):
                                delete_url = (str(request.path) + "/delete"),
                                edit_url = (str(request.path) + "/edit"),
                                categories = categories,
+                               author=author,
                                top_categories = top_categories,
                                user_dict = session['user_data_dict'])
 
@@ -1034,6 +1034,7 @@ def view_item(cat_name, item_name):
                            delete_url = (str(request.path) + "/delete"),
                            edit_url = (str(request.path) + "/edit"),
                            categories = categories,
+                           author=author,
                            top_categories = top_categories)
 
 
@@ -1058,6 +1059,7 @@ def delete_item(cat_name, item_name, confirm = 0):
 
     category = None
     item = None
+
     try:
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
@@ -1093,8 +1095,9 @@ def delete_item(cat_name, item_name, confirm = 0):
                                 statment = statment,
                                 confirm_url = (str(request.path) + "/1"),
                                 categories = categories,
+                                user_dict = session['user_data_dict'],
                                 top_categories = top_categories )
-
+#TODO add author name for every item
     db.delete(item)
     db.commit()
     db.close()
@@ -1155,7 +1158,22 @@ def delete_category(cat_name, confirm = 0):
 #______________________________ End DELELTE views _____________________________#
 
 # Helping functions for validating user inputs
-def validate_item(request):
+def validate_item(request,edited_item_id=None):
+
+    print( "\n    .\n    .\n    .\nINFO id > " + str(edited_item_id))
+
+    #TODO copy This
+    try_again_url = '/catalog/new-item'
+
+    edited_item = None
+
+    db = DBSession()
+
+    if edited_item_id:
+        print( "\n    .\n    .\n    .\nINFO in > " + str(edited_item_id))
+        edited_item = db.query(Item).filter_by(id=edited_item_id).one()
+        try_again_url = ('/catalog/' + str(edited_item.category.name) +
+                         '/' + str(edited_item.title) + '/edit')
 
     # check the post request body data form
     if not ( request.form and  'title'            in request.form and
@@ -1163,6 +1181,7 @@ def validate_item(request):
                            'category'             in request.form ) :
         response = make_response(json.dumps('Invalid form data.'), 406)
         response.headers['Content-Type'] = 'application/json'
+        db.close()
         return response
 
     title           = request.form['title']
@@ -1171,55 +1190,88 @@ def validate_item(request):
 
     # validate all the given data
     if len(title) < 1:
+
         statment = ('Please enter a title ,' +
-            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+            '<a href="' + try_again_url +
+            '" style="font-size:39px">Try again here</a>')
+        db.close()
         return  render_template('status_message.html',statment = statment)
 
     if len(description) < 1:
         statment = ('Please enter a description ,' +
-            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+        '<a href="' + try_again_url +
+        '" style="font-size:39px">Try again here</a>')
+        db.close()
         return  render_template('status_message.html',statment = statment)
 
     if len(title) > 99:
         statment = ('The title is too long ,' +
-            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+            '<a href="' + try_again_url +
+            '" style="font-size:39px">Try again here</a>')
+        db.close()
         return  render_template('status_message.html',statment = statment)
 
     if len(description) > 999:
         statment = ('The description is too long ,' +
-            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
-        return  render_template('status_message.html',statment = statment)
-
-    db = DBSession()
-
-    if db.query(Item).filter_by(title = title).count() != 0:
-        statment = ('An item with the same title already exists ,' +
-            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+            '<a href="' + try_again_url +
+            '" style="font-size:39px">Try again here</a>')
         db.close()
         return  render_template('status_message.html',statment = statment)
 
+    if not edited_item:
+        if db.query(Item).filter_by(title = title).count() != 0:
+            statment = ('An item with the same title already exists ,' +
+                '<a href="' + try_again_url +
+                '" style="font-size:39px">Try again here</a>')
+            db.close()
+            return  render_template('status_message.html',statment = statment)
+
+    else:
+        if db.query(Item).filter_by(title = title).count() > 1:
+            statment = ('An item with the same title already exists ,' +
+                '<a href="' + try_again_url +
+                '" style="font-size:39px">Try again here</a>')
+            db.close()
+            return  render_template('status_message.html',statment = statment)
+
     item_cat = db.query(Category).filter_by( name = category ).one()
 
-    current_user = getUserDBInfo(session['user_data_dict']['id'], db, False)
+    current_user_id = getUserID(session['user_data_dict']['email'], db, False)
+    current_user = getUserDBInfo(current_user_id, db, False)
 
-    new_item = Item( title = title,
-                     description = description,
-                     category = item_cat,
-                     author = current_user )
-    db.add(new_item)
-    db.commit()
+    new_item = None
+
+    if edited_item == None:
+        new_item = Item( title = title,
+                         description = description,
+                         category = item_cat,
+                         author = current_user )
+
+        # redirect to the new item page
+        redirect_url = '/catalog/' + str( item_cat.name )
+        redirect_url += '/' + str(new_item.title)
+
+        db.add(new_item)
+        db.commit()
+    else:
+        edited_item.title = title
+        edited_item.description = description
+        edited_item.category = item_cat
+
+        # redirect to the edited item page
+        redirect_url = '/catalog/' + str( edited_item.category.name )
+        redirect_url += '/' + str(edited_item.title)
+
+        db.add(edited_item)
+        db.commit()
 
 
-    # redirect to the new item page
-    redirect_url = '/catalog/' + str( item_cat.name )
-    redirect_url += '/' + str(new_item.title)
 
     db.close()
 
     return redirect(redirect_url)
 
 #_____________________________ Start CREATE views _____________________________#
-# TODO make seperate functions to validate new or edit post requests
 @app.route("/catalog/new-item", methods = ['POST','GET'])
 def new_item():
 
@@ -1230,7 +1282,19 @@ def new_item():
 
     # if it is a GET request
     if request.method != 'POST':
+
+        current_cat_id = None
+        current_cat = None
+
         db = DBSession()
+
+        if request.args.get("cc"):
+            current_cat_id = request.args.get("cc")
+
+            try:
+                current_cat = db.query(Category).filter_by(id=current_cat_id).one()
+            except:
+                current_cat = None
 
         # retreive the required data from the database
         categories = db.query(Category)
@@ -1238,9 +1302,10 @@ def new_item():
 
         db.close()
 
-
+#TODO ** in every render template , render the template then close the db then return
         return render_template("new_item.html",
                                categories=categories,
+                               current_cat=current_cat,
                                top_categories=top_categories,
                                user_dict = session['user_data_dict'])
 
@@ -1249,6 +1314,78 @@ def new_item():
 
 
 #______________________________ End CREATE views ______________________________#
+
+#______________________________START UPDATE VIEWS______________________________#
+
+@app.route("/catalog/<string:cat_name>/<string:item_name>/edit", methods = ['POST','GET'])
+def edit_item(cat_name, item_name):
+
+    if 'signed' not in session or not session['signed']:
+        statment = ('Please log in first ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    category = None
+    item = None
+
+    db = DBSession()
+
+    try:
+        category = db.query(Category).filter_by(name = cat_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_404.html", cat_name = cat_name)
+
+    try:
+        item = db.query(Item).filter_by(
+                                cat_id = category.id, title = item_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/item_404.html",
+                                cat_name = cat_name,
+                                item_name = item_name)
+
+    author = db.query(User).filter_by(id = item.author_id).one()
+
+    # check if the user is the item's author ,if not
+    # then he is not allowed to edit
+
+    if session['user_data_dict']['email'] != author.email :
+        statment = ('Only the item owner can delete it ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        db.close()
+        return  render_template('status_message.html',statment = statment)
+
+    if session['user_data_dict']['email'] != author.email :
+        statment = ('Only the item owner can edit it ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        db.close()
+        return  render_template('status_message.html',statment = statment)
+
+    # if it is a GET request
+    if request.method != 'POST':
+
+        db = DBSession()
+
+        # retreive the required data from the database
+        categories = db.query(Category)
+        top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+
+        db.close()
+
+#TODO ** in every render template , render the template then close the db then return
+        return render_template("edit_item.html",
+                               categories=categories,
+                               current_cat=category,
+                               old_item=item,
+                               top_categories=top_categories,
+                               user_dict = session['user_data_dict'])
+
+    item_id = item.id
+    db.close()
+    return validate_item(request,item_id)
+
+#_______________________________END UPDATE VIEWS_______________________________#
 
 #______________________________________________________________________________#
 ############################ End main and CRUD views ###########################

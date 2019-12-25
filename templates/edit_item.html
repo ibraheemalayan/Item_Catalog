@@ -6,7 +6,7 @@
 			<div class="container">
 				<div class="row">
 					<div class="col-md-10">
-						<h1> Create Item </h1>
+						<h1> Edit Item </h1>
 					</div>
 				</div>
 			</div>
@@ -25,14 +25,14 @@
 				<!-- row -->
 				<div class="row">
 					<div class="col-md-4">
-						<form class="form" action="/catalog/new-item" method="post">
+						<form class="form" action="/catalog/{{ current_cat.name }}/{{ old_item.title }}/edit" method="post">
 
               <!-- field -->
               <div class="field_name">
     						Name
     					</div>
     					<div class="input_div">
-    						<input class="input" type="text" name="title" >
+    						<input class="input" type="text" name="title" value="{{ old_item.title }}" >
     					</div>
               <!-- /field -->
 
@@ -63,12 +63,12 @@
     						description
     					</div>
     					<div class="input_div">
-    						<textarea name="description" rows="10" cols="99" type="text"></textarea>
+    						<textarea name="description" rows="10" cols="99" type="text">{{ old_item.description }}</textarea>
     					</div>
               <!-- /field -->
 
 							<div class="input_div">
-    						<input name="submit" type="submit" class="submit_btn">
+    						<input name="save" type="submit" class="submit_btn">
     					</div>
 
             </form>
