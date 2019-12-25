@@ -913,24 +913,29 @@ def index():
     top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
     latest_items = db.query(Item).order_by(desc(Item.id)).limit(8)
 
-    db.close()
-
     # check if user is signed
     if 'signed' not in session:
         session['signed'] = False
 
     if session['signed']:
-        return render_template("index.html" ,
+        template = render_template("index.html" ,
                                categories = categories,
                                items = latest_items,
                                top_categories = top_categories,
                                user_dict = session["user_data_dict"])
 
-    return render_template("index.html" ,
+        db.close()
+
+        return template
+
+    template =  render_template("index.html" ,
                             categories = categories,
                             items = latest_items,
                             top_categories = top_categories)
 
+    db.close()
+
+    return template
 
 #_______________________________ End index view _______________________________#
 #______________________________ Start READ views ______________________________#
@@ -959,14 +964,12 @@ def view_category_items(cat_name):
         db.close()
         return render_template("errors/category_empty.html", cat_name=cat_name)
 
-    db.close()
-
     if 'signed' not in session:
         session['signed'] = False
 
     if session['signed']:
         # renders the HTML template with the data
-        return render_template("category.html",
+        template = render_template("category.html",
                                items = items,
                                categories = categories,
                                delete_url = (str(request.path)[:-6] + "/delete"),
@@ -974,15 +977,22 @@ def view_category_items(cat_name):
                                top_categories = top_categories,
                                category = category,
                                user_dict = session["user_data_dict"])
+        db.close()
+
+        return template
 
     # renders the HTML template with the data
-    return render_template("category.html",
+    template =  render_template("category.html",
                            items = items,
                            categories = categories,
                            delete_url = (str(request.path)[:-6] + "/delete"),
                            edit_url     = (str(request.path) + "/edit"),
                            top_categories = top_categories,
                            category = category)
+
+    db.close()
+
+    return template
 
 
 @app.route('/catalog/<string:cat_name>/<string:item_name>')
@@ -1012,13 +1022,12 @@ def view_item(cat_name, item_name):
                                 item_name = item_name)
 
     author = db.query(User).filter_by(id = item.author_id).one()
-    db.close()
 
     if 'signed' not in session:
         session['signed'] = False
 
     if session['signed']:
-        return render_template("item.html",
+        template = render_template("item.html",
                                item = item,
                                category = category,
                                delete_url = (str(request.path) + "/delete"),
@@ -1028,7 +1037,11 @@ def view_item(cat_name, item_name):
                                top_categories = top_categories,
                                user_dict = session['user_data_dict'])
 
-    return render_template("item.html",
+        db.close()
+
+        return template
+
+    template = render_template("item.html",
                            item = item,
                            category = category,
                            delete_url = (str(request.path) + "/delete"),
@@ -1037,6 +1050,9 @@ def view_item(cat_name, item_name):
                            author=author,
                            top_categories = top_categories)
 
+    db.close()
+
+    return template
 
 #_______________________________ End READ views _______________________________#
 #_____________________________ Start DELELTE views ____________________________#
@@ -1090,13 +1106,14 @@ def delete_item(cat_name, item_name, confirm = 0):
     if confirm == 0:
         statment = 'Please confirm that you want to delete the item "'
         statment += item.title + '"'
-        db.close()
-        return render_template( 'confirm.html',
+        template = render_template( 'confirm.html',
                                 statment = statment,
                                 confirm_url = (str(request.path) + "/1"),
                                 categories = categories,
                                 user_dict = session['user_data_dict'],
                                 top_categories = top_categories )
+        db.close()
+        return template
 #TODO add author name for every item
     db.delete(item)
     db.commit()
@@ -1137,12 +1154,14 @@ def delete_category(cat_name, confirm = 0):
     if confirm == 0:
         statment = 'Please confirm that you want to delete the category " <font color = "#008eff">'
         statment += category.name + '</font> "'
-        db.close()
-        return render_template( 'confirm.html',
+        template = render_template( 'confirm.html',
                                 statment = statment,
                                 confirm_url = (str(request.path) + "/1"),
                                 categories = categories,
                                 top_categories = top_categories )
+        db.close()
+
+        return template
 
     for i in items:
         db.delete(i)
@@ -1300,14 +1319,16 @@ def new_item():
         categories = db.query(Category)
         top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
 
-        db.close()
 
-#TODO ** in every render template , render the template then close the db then return
-        return render_template("new_item.html",
+        template = render_template("new_item.html",
                                categories=categories,
                                current_cat=current_cat,
                                top_categories=top_categories,
                                user_dict = session['user_data_dict'])
+
+        db.close()
+
+        return template
 
     return validate_item(request)
 
@@ -1371,15 +1392,16 @@ def edit_item(cat_name, item_name):
         categories = db.query(Category)
         top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
 
-        db.close()
-
-#TODO ** in every render template , render the template then close the db then return
-        return render_template("edit_item.html",
+        template = render_template("edit_item.html",
                                categories=categories,
                                current_cat=category,
                                old_item=item,
                                top_categories=top_categories,
                                user_dict = session['user_data_dict'])
+
+        db.close()
+
+        return template
 
     item_id = item.id
     db.close()
