@@ -1,0 +1,74 @@
+{% extends "main.html" %}
+{% block content %}
+
+    <!-- section -->
+		<div class="page-header" style="margin-top:40px;padding-bottom:40px;">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-10">
+						<h1> Create Item </h1>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /section -->
+
+		<!-- white section -->
+		<div class="section">
+		</div>
+		<!-- /white section -->
+
+		<!-- section -->
+		<div class="section section-grey">
+			<!-- container -->
+			<div class="container">
+				<!-- row -->
+				<div class="row">
+					<div class="col-md-4">
+						<form class="form" action="/catalog/new-item" method="post">
+
+              <!-- field -->
+              <div class="field_name">
+    						Name
+    					</div>
+    					<div class="input_div">
+    						<input class="input" type="text" name="title" >
+    					</div>
+              <!-- /field -->
+
+              <!-- field -->
+              <div class="field_name">
+    						Category
+    					</div>
+    					<div class="input_div">
+                <select name="category" class="input">
+                  {% for c in categories %}
+                  <option value="{{ c.name }}">{{ c.name }}</option>
+									{% endfor %}
+                </select>
+    					</div>
+              <!-- /field -->
+
+              <!-- field -->
+              <div class="field_name">
+    						description
+    					</div>
+    					<div class="input_div">
+    						<textarea name="description" rows="10" cols="99" type="text"></textarea>
+    					</div>
+              <!-- /field -->
+
+							<div class="input_div">
+    						<input name="submit" type="submit" class="submit_btn">
+    					</div>
+
+            </form>
+					</div>
+				</div>
+				<!-- /row -->
+			</div>
+			<!-- /container -->
+		</div>
+		<!-- /section -->
+
+{% endblock %}

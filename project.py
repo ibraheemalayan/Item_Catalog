@@ -901,7 +901,6 @@ def get_fonts(path):
 ########################### Start main and CRUD views ##########################
 #______________________________________________________________________________#
 
-
 #______________________________ Start index view ______________________________#
 
 @app.route('/')
@@ -913,7 +912,7 @@ def index():
     # retreive the required data from the database
     categories = db.query(Category)
     top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
-    latest_items = db.query(Item).order_by(desc(Item.id)).limit(9)
+    latest_items = db.query(Item).order_by(desc(Item.id)).limit(8)
 
     db.close()
 
@@ -1027,7 +1026,7 @@ def view_item(cat_name, item_name):
                                edit_url = (str(request.path) + "/edit"),
                                categories = categories,
                                top_categories = top_categories,
-                               user_data_dict = session['user_data_dict'])
+                               user_dict = session['user_data_dict'])
 
     return render_template("item.html",
                            item = item,
@@ -1153,8 +1152,103 @@ def delete_category(cat_name, confirm = 0):
         '<a href="/index" style="font-size:39px">Home page here</a>')
     return  render_template('status_message.html',statment = statment)
 
-#_____________________________ Start DELELTE views ____________________________#
+#______________________________ End DELELTE views _____________________________#
 
+# Helping functions for validating user inputs
+def validate_item(request):
+
+    # check the post request body data form
+    if not ( request.form and  'title'            in request.form and
+                           'description'          in request.form and
+                           'category'             in request.form ) :
+        response = make_response(json.dumps('Invalid form data.'), 406)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    title           = request.form['title']
+    description     = request.form['description']
+    category        = request.form['category']
+
+    # validate all the given data
+    if len(title) < 1:
+        statment = ('Please enter a title ,' +
+            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    if len(description) < 1:
+        statment = ('Please enter a description ,' +
+            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    if len(title) > 99:
+        statment = ('The title is too long ,' +
+            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    if len(description) > 999:
+        statment = ('The description is too long ,' +
+            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    db = DBSession()
+
+    if db.query(Item).filter_by(title = title).count() != 0:
+        statment = ('An item with the same title already exists ,' +
+            '<a href="/catalog/new-item" style="font-size:39px">Try again here</a>')
+        db.close()
+        return  render_template('status_message.html',statment = statment)
+
+    item_cat = db.query(Category).filter_by( name = category ).one()
+
+    current_user = getUserDBInfo(session['user_data_dict']['id'], db, False)
+
+    new_item = Item( title = title,
+                     description = description,
+                     category = item_cat,
+                     author = current_user )
+    db.add(new_item)
+    db.commit()
+
+
+    # redirect to the new item page
+    redirect_url = '/catalog/' + str( item_cat.name )
+    redirect_url += '/' + str(new_item.title)
+
+    db.close()
+
+    return redirect(redirect_url)
+
+#_____________________________ Start CREATE views _____________________________#
+# TODO make seperate functions to validate new or edit post requests
+@app.route("/catalog/new-item", methods = ['POST','GET'])
+def new_item():
+
+    if 'signed' not in session or not session['signed']:
+        statment = ('Please log in first ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    # if it is a GET request
+    if request.method != 'POST':
+        db = DBSession()
+
+        # retreive the required data from the database
+        categories = db.query(Category)
+        top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+
+        db.close()
+
+
+        return render_template("new_item.html",
+                               categories=categories,
+                               top_categories=top_categories,
+                               user_dict = session['user_data_dict'])
+
+    return validate_item(request)
+
+
+
+#______________________________ End CREATE views ______________________________#
 
 #______________________________________________________________________________#
 ############################ End main and CRUD views ###########################

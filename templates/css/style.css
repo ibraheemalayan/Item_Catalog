@@ -70,10 +70,29 @@ RESPONSIVE
  p {
      margin: 0px 0px 20px;
 }
+
+textarea {
+    align-content: center;
+    margin-bottom: 20px;
+    width: 300px;
+    border: 2px solid lightsteelblue;
+    width: 100%;
+    padding: 0px 15px;
+    -webkit-transition: 0.2s border;
+    transition: 0.2s border;
+    font-family: monospace;
+    font-size: 20px;
+    color: lightseagreen;
+}
+
  ul,ol{
      margin: 0;
      padding: 0;
      list-style: none
+}
+form {
+  width: 500px;
+
 }
  ul.list-style, ol.list-style {
      padding-left: 15px;
@@ -115,18 +134,36 @@ RESPONSIVE
 }
  .input {
      height: 40px;
-     border: 2px solid #eceef2;
+     align-content: center;
+     margin-bottom: 20px;
+     border: 2px solid lightsteelblue;
      width: 100%;
      padding: 0px 15px;
      -webkit-transition: 0.2s border;
      transition: 0.2s border;
+     font-family: monospace;
+     font-size: 20px;
+     color: lightseagreen;
+}
+
+.field_name {
+  font-family: monospace;
+  font-size: 25px;
+  color: grey;
 }
  .input:focus {
      border-color: #3d455c;
 }
- textarea.input {
-     height: 90px;
-     padding: 15px;
+ .submit_btn{
+   border: 2px solid lightsteelblue;
+   background-color: #47a589;
+   width: 180px;
+   height: 50px;
+   margin-bottom: 20px;
+   font-size: 30px;
+   color: #212631;
+   font-weight: bold;
+ }
 }
  .primary-button {
      padding: 9px 45px;
