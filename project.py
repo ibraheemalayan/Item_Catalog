@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # TODO Checklist
 # make a README.md (copy it from logs analysis project)
-# documenate your code
 # Follow PEP 8
 # check that you meet the requirements here > https://review.udacity.com/#!/rubrics/2008/view
 
@@ -987,7 +986,7 @@ def view_category_items(cat_name):
 
     return template
 
-
+# view certain item
 @app.route('/catalog/<string:cat_name>/<string:item_name>')
 def view_item(cat_name, item_name):
 
@@ -1055,6 +1054,8 @@ def view_item(cat_name, item_name):
 
 ################################ JSON READ APIs ################################
 
+# return a json dictionary containing the whole catalog
+# ( without items descriptions )
 @app.route("/catalog/json")
 def index_json():
 
@@ -1087,6 +1088,8 @@ def index_json():
 
     return response
 
+# return a json dictionary containing all the items in a certain category
+# ( without items descriptions )
 @app.route('/catalog/<string:cat_name>/json')
 def category_json(cat_name):
 
@@ -1126,6 +1129,7 @@ def category_json(cat_name):
 
     return response
 
+# return all attributes for a certain item
 @app.route('/catalog/<string:cat_name>/<string:item_name>/json')
 def item_json(cat_name, item_name):
 
@@ -1407,6 +1411,7 @@ def validate_item(request,edited_item_id=None):
 
 #_____________________________ Start CREATE views _____________________________#
 
+# make new category
 @app.route("/catalog/new-category", methods = ['POST','GET'])
 def new_category():
 
@@ -1682,9 +1687,10 @@ def edit_item(cat_name, item_name):
 ############################# End of VIEWS #####################################
 ################################################################################
 
-#Run
+# Run the server ( over SSL ) on localhost port 5000
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
+    # TODO after testing remove this or set it to false
     app.debug = True
     # facebook login works only over https
     app.run(host = '0.0.0.0', port = 5000, ssl_context='adhoc')

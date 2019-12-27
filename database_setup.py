@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = 'user'
 
@@ -18,27 +19,29 @@ class User(Base):
 
     @property
     def serialize(self):
-       """Return object data in easily serializeable format"""
-       return {
-           'name'         : self.name,
-           'id'           : self.id,
-           'picture'      : self.picture,
-           'email'        : self.email
-       }
+        """Return object data in easily serializeable format"""
+        return {
+            'name':          self.name,
+            'id':            self.id,
+            'picture':       self.picture,
+            'email':         self.email
+        }
+
 
 class Category(Base):
     __tablename__ = 'category'
 
-    id = Column(Integer, primary_key = True)
-    name =Column(String(80), nullable = False)
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80), nullable=False)
 
     @property
     def serialize(self):
-       """Return object data in easily serializeable format"""
-       return {
-           'category_name'         : self.name,
-           'category_id'           : self.id
-       }
+        """Return object data in easily serializeable format"""
+        return {
+            'category_name':        self.name,
+            'category_id':          self.id
+        }
+
 
 class Item(Base):
     __tablename__ = 'item'
@@ -53,29 +56,26 @@ class Item(Base):
 
     @property
     def serialize(self):
-       """Return object data in easily serializeable format"""
-       return {
-           'item_title'         : self.title,
-           'item_id'            : self.id,
-           'category_id'        : self.cat_id,
-           'author_id'          : self.author_id
-       }
+        """Return object data in easily serializeable format"""
+        return {
+            'item_title':          self.title,
+            'item_id':             self.id,
+            'category_id':         self.cat_id,
+            'author_id': '         self.author_id
+        }
 
     @property
     def serialize_with_description(self):
         """Return object data in easily serializeable format"""
         return {
-            'item_title'         : self.title,
-            'item_id'            : self.id,
-            'category_id'        : self.cat_id,
-            'author_id'          : self.author_id,
-            'description'        : self.description
+            'item_title':          self.title,
+            'item_id':             self.id,
+            'category_id':         self.cat_id,
+            'author_id': '         self.author_id,
+            'description':         self.description
         }
-
-# TODO fix 404 templates
 
 
 engine = create_engine('sqlite:///Item_Catalog.db')
-
 
 Base.metadata.create_all(engine)
