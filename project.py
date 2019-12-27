@@ -1055,21 +1055,105 @@ def view_item(cat_name, item_name):
 
 ################################ JSON READ APIs ################################
 
-# @app.route("/catalog.json")
-# def index_json():
-#
-#     db = DBSession()
-#
-#     # retreive the required data from the database
-#     categories = db.query(Category).all()
-#
-#
-#     db.close()
-#
-#     response = make_response(json.dumps('json'), 200)
-#     response.headers['Content-Type'] = 'application/json'
-#
-#     return response
+@app.route("/catalog/json")
+def index_json():
+
+    db = DBSession()
+
+    # retreive the required data from the database
+    categories = db.query(Category).all()
+
+    result_dict = {}
+
+    for c in categories:
+        result_dict[c.name] = c.serialize
+        result_dict[c.name]['items'] = {}
+
+        try:
+            items = db.query(Item).filter_by(cat_id = c.id)
+
+            for i in items:
+                result_dict[c.name]['items'][i.title] = i.serialize
+
+                # not needed
+                del result_dict[c.name]['items'][i.title]['category_id']
+        except NoResultFound:
+            pass
+
+    db.close()
+
+    response = make_response(json.dumps(result_dict), 200)
+    response.headers['Content-Type'] = 'application/json'
+
+    return response
+
+@app.route('/catalog/<string:cat_name>/json')
+def category_json(cat_name):
+
+    db = DBSession()
+
+    category = None
+
+    try:
+        category = db.query(Category).filter_by(name = cat_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_404.html", cat_name = cat_name)
+
+    result_dict = {}
+
+    result_dict[category.name] = category.serialize
+    result_dict[category.name]['items'] = {}
+
+    try:
+        items = db.query(Item).filter_by(cat_id = category.id)
+
+        for i in items:
+            result_dict[category.name]['items'][i.title] = i.serialize
+
+            # not needed
+            del result_dict[category.name]['items'][i.title]['category_id']
+    except NoResultFound:
+        pass
+
+    db.close()
+
+    response = make_response(json.dumps(result_dict), 200)
+    response.headers['Content-Type'] = 'application/json'
+
+    return response
+
+@app.route('/catalog/<string:cat_name>/<string:item_name>/json')
+def item_json(cat_name, item_name):
+
+    db = DBSession()
+
+    category = None
+    item = None
+
+    try:
+        category = db.query(Category).filter_by(name = cat_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_404.html", cat_name = cat_name)
+
+    try:
+        item = db.query(Item).filter_by(title = item_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/item_404.html", cat_name = cat_name)
+
+    result_dict = {}
+
+    result_dict[item.title] = item.serialize_with_description
+
+    db.close()
+
+    response = make_response(json.dumps(result_dict), 200)
+    response.headers['Content-Type'] = 'application/json'
+
+    return response
+
 
 
 #_______________________________ End READ views _______________________________#

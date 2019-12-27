@@ -36,8 +36,8 @@ class Category(Base):
     def serialize(self):
        """Return object data in easily serializeable format"""
        return {
-           'name'         : self.name,
-           'id'           : self.id
+           'category_name'         : self.name,
+           'category_id'           : self.id
        }
 
 class Item(Base):
@@ -55,13 +55,24 @@ class Item(Base):
     def serialize(self):
        """Return object data in easily serializeable format"""
        return {
-           'title'         : self.title,
-           'id'            : self.id,
-           'cat_id'        : self.cat_id,
-           'author_id'     : self.author_id
-           #TODO un comment this > 'description'   : self.description
+           'item_title'         : self.title,
+           'item_id'            : self.id,
+           'category_id'        : self.cat_id,
+           'author_id'          : self.author_id
        }
 
+    @property
+    def serialize_with_description(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'item_title'         : self.title,
+            'item_id'            : self.id,
+            'category_id'        : self.cat_id,
+            'author_id'          : self.author_id,
+            'description'        : self.description
+        }
+
+# TODO fix 404 templates
 
 
 engine = create_engine('sqlite:///Item_Catalog.db')
