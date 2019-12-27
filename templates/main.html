@@ -35,13 +35,13 @@
 							<li><a href="https://localhost:5000/">Home</a></li>
 							<li id="sep"> Hottest <br> Categories </li>
 							{% for c in top_categories %}
-							<li class="cat-{{ ((c.id + 2 ) % 4) + 1 }}"><a href="{{ '/catalog/' + c.name + '/items' }}">{{ c.name }}</a></li>
+							<li class="cat-{{ ((c.id + 2 ) % 4) + 1 }}"><a href="{{ 'https://localhost:5000/catalog/' + c.name + '/items' }}">{{ c.name }}</a></li>
 							{% endfor %}
               {% if not user_dict %}
-              <li><a href="{{ url_for('internal_sign_up') }}" class="btn green" style="padding:12px 15px 12px 15px;">Sign up</a></li>
-              <li><a href="{{ url_for('login') }}" class="btn red" style="padding:12px 15px 12px 15px;margin-left:20px">Log in</a></li>
+              <li><a href="{{ url_for('internal_sign_up', _external = True ) }}" class="btn green" style="padding:12px 15px 12px 15px;">Sign up</a></li>
+              <li><a href="{{ url_for('login', _external = True ) }}" class="btn red" style="padding:12px 15px 12px 15px;margin-left:20px">Log in</a></li>
               {% else %}
-              <li><a href="{{ url_for('revoke') }}" class="btn red" style="padding: 12px 15px 12px 15px;">Sign out</a></li>
+              <li><a href="{{ url_for('revoke', _external = True ) }}" class="btn red" style="padding: 12px 15px 12px 15px;">Sign out</a></li>
 							<li><img src="{{ user_dict['picture'] }}" id="profile_img"></li>
               {% endif %}
 
@@ -77,7 +77,7 @@
 						<div class="post">
 							<div class="post-body">
 								<div class="post-meta">
-									<a class="post-category cat-{{ ((c.id + 2 ) % 4) + 1 }}" href="{{ '/catalog/' + c.name + '/items' }}">{{ c.name }}</a>
+									<a class="post-category cat-{{ ((c.id + 2 ) % 4) + 1 }}" href="{{ 'https://localhost:5000/catalog/' + c.name + '/items' }}">{{ c.name }}</a>
 								</div>
 							</div>
 						</div>
@@ -85,6 +85,18 @@
 					<!-- /post -->
 
 					{% endfor %}
+
+					<!-- post -->
+					<div class="col-md-4">
+						<div class="post">
+							<div class="post-body">
+								<div class="post-meta">
+									<a class="post-category" href="https://localhost:5000/catalog/new-category"> + Add </a>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- /post -->
 
 				</div>
 				<!-- /row -->
@@ -98,7 +110,7 @@
 			<div class="container">
 				<!-- row -->
 							<ul class="footer-nav">
-								<li><a href="https://localhost:5000/" style="font-size:40px;font-weight:bold;font-style:italic;color:#34118f;text-decoration:underline;">Item Cataolg</a></li>
+								<li><a href="https://localhost:5000/">Item Cataolg</a></li>
 							</ul>
 							<div class="post-body">
 								This Website was made by Ibraheem Alyan

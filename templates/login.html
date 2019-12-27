@@ -15,7 +15,7 @@
 	<div class="limiter">
 		<div class="container-login100" style="background-image: url('https://localhost:5000/img/bg-02.jpg');">
 			<div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
-				<form class="login100-form validate-form flex-sb flex-w" action="{{ url_for('internal_login') }}" method="post">
+				<form class="login100-form validate-form flex-sb flex-w" action="{{ url_for('internal_login', _external = True ) }}" method="post">
 					<span class="login100-form-title p-b-53">
 						Sign In With
 					</span>
@@ -25,7 +25,7 @@
 						Facebook
 					</a>
 
-					<a href="{{ url_for('google_authorize') }}" class="btn-google m-b-20" style="text-decoration:none">
+					<a href="{{ url_for('google_authorize', _external = True ) }}" class="btn-google m-b-20" style="text-decoration:none">
 						<img src="https://localhost:5000/img/icon-google.png" alt="GOOGLE">
 						Google
 					</a>
@@ -49,7 +49,7 @@
 							Password
 						</span>
 
-						<a href="{{url_for('password_recovery')}}" class="txt2 bo1 m-l-5" style="text-decoration:none">
+						<a href="{{url_for('password_recovery', _external = True )}}" class="txt2 bo1 m-l-5" style="text-decoration:none">
 							Forgot?
 						</a>
 					</div>
@@ -69,7 +69,7 @@
 							Not a member?
 						</span>
 
-						<a href="{{ url_for('internal_sign_up') }}" class="txt2 bo1" style="text-decoration:none">
+						<a href="{{ url_for('internal_sign_up', _external = True ) }}" class="txt2 bo1" style="text-decoration:none">
 							Sign up now
 						</a>
 					</div>

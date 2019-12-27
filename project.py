@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # TODO Checklist
-# make a public page and logged_in page
 # make the json endpoints for every page on post methods
 # make a README.md (copy it from logs analysis project)
 # documenate your code
@@ -207,7 +206,7 @@ def fbconnect():
     session['user_db_id'] = user_db_id
 
     # redirect to homepage
-    return redirect( url_for('index') )
+    return redirect( url_for('index', _external = True ) )
 
 #__________________________ End Facebook login views __________________________#
 #__________________________ Start Google login views __________________________#
@@ -242,7 +241,7 @@ def get_google_user_info():
 
     # validate that user's information is received
     if 'error' in data:
-        return redirect(url_for('google_authorize'))
+        return redirect(url_for('google_authorize', _external = True ))
 
     json_user_data = data.json()
 
@@ -277,7 +276,7 @@ def get_google_user_info():
     session['user_data_dict']['id'] = user_db_id
 
     # redirect to homepage
-    return redirect( url_for('index') )
+    return redirect( url_for('index', _external = True ) )
 
 # first google sign in view
 @app.route('/google_authorize')
@@ -333,7 +332,7 @@ def google_oauth2callback():
     session['google_credentials'] = credentials_to_dict(credentials)
 
     # get user's information
-    return redirect(url_for('get_google_user_info'))
+    return redirect(url_for('get_google_user_info', _external = True ))
 
 
 #___________________________ End Google login views ___________________________#
@@ -464,7 +463,7 @@ def update_password(email):
 #_________________________ Start internal login view __________________________#
 
 #TODO Limit user requests per minute
-#TODO clean the styles.css
+#TODO style the 404 templates
 
 # receives post request from the main login page
 @app.route("/internal_login", methods = ['POST'])
@@ -475,7 +474,7 @@ def internal_login():
         session['signed'] = False
     if session['signed']:
         revoke()
-
+#TODO turn all links in html to full
     # checks the post request body data form
     if 'email' not in request.form or 'password' not in request.form:
         response = make_response(json.dumps('Invalid form data.'), 406)
@@ -541,7 +540,7 @@ def internal_login():
     session['user_data_dict'] = user_data_dict
 
     # redirect to homepage
-    return redirect( url_for('index') )
+    return redirect( url_for('index', _external = True ) )
 
 #__________________________ End internal login view ___________________________#
 #________________________ Start internal sign up view _________________________#
@@ -732,7 +731,7 @@ def internal_sign_up():
     db.commit()
     db.close()
 
-    return redirect( url_for('login') )
+    return redirect( url_for('login', _external = True ) )
 
 
 #_________________________ End internal sign up view __________________________#
@@ -973,7 +972,7 @@ def view_category_items(cat_name):
                                items = items,
                                categories = categories,
                                delete_url = (str(request.path)[:-6] + "/delete"),
-                               edit_url = (str(request.path) + "/edit"),
+                               edit_url = (str(request.path)[:-6] + "/edit"),
                                top_categories = top_categories,
                                category = category,
                                user_dict = session["user_data_dict"])
@@ -986,7 +985,7 @@ def view_category_items(cat_name):
                            items = items,
                            categories = categories,
                            delete_url = (str(request.path)[:-6] + "/delete"),
-                           edit_url     = (str(request.path) + "/edit"),
+                           edit_url     = (str(request.path)[:-6] + "/edit"),
                            top_categories = top_categories,
                            category = category)
 
@@ -1053,6 +1052,25 @@ def view_item(cat_name, item_name):
     db.close()
 
     return template
+
+################################ JSON READ APIs ################################
+
+# @app.route("/catalog.json")
+# def index_json():
+#
+#     db = DBSession()
+#
+#     # retreive the required data from the database
+#     categories = db.query(Category).all()
+#
+#
+#     db.close()
+#
+#     response = make_response(json.dumps('json'), 200)
+#     response.headers['Content-Type'] = 'application/json'
+#
+#     return response
+
 
 #_______________________________ End READ views _______________________________#
 #_____________________________ Start DELELTE views ____________________________#
@@ -1179,9 +1197,6 @@ def delete_category(cat_name, confirm = 0):
 # Helping functions for validating user inputs
 def validate_item(request,edited_item_id=None):
 
-    print( "\n    .\n    .\n    .\nINFO id > " + str(edited_item_id))
-
-    #TODO copy This
     try_again_url = '/catalog/new-item'
 
     edited_item = None
@@ -1189,7 +1204,6 @@ def validate_item(request,edited_item_id=None):
     db = DBSession()
 
     if edited_item_id:
-        print( "\n    .\n    .\n    .\nINFO in > " + str(edited_item_id))
         edited_item = db.query(Item).filter_by(id=edited_item_id).one()
         try_again_url = ('/catalog/' + str(edited_item.category.name) +
                          '/' + str(edited_item.title) + '/edit')
@@ -1291,6 +1305,74 @@ def validate_item(request,edited_item_id=None):
     return redirect(redirect_url)
 
 #_____________________________ Start CREATE views _____________________________#
+
+@app.route("/catalog/new-category", methods = ['POST','GET'])
+def new_category():
+
+    if 'signed' not in session or not session['signed']:
+        statment = ('Please log in first ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    db = DBSession()
+
+    # if it is a GET request
+    if request.method != 'POST':
+
+        # retreive the required data from the database
+        categories = db.query(Category)
+        top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+
+
+        template = render_template("new_category.html",
+                               categories=categories,
+                               top_categories=top_categories,
+                               user_dict = session['user_data_dict'])
+
+        db.close()
+
+        return template
+
+    if not request.form['name']:
+        response = make_response(json.dumps('Invalid form data.'), 406)
+        response.headers['Content-Type'] = 'application/json'
+        db.close()
+        return response
+
+    name = request.form['name']
+
+    if len(name) < 1:
+        statment = ('Please enter a name ,' +
+            '<a href="/catalog/new-category" ' +
+            'style="font-size:39px">Try again here</a>')
+        db.close()
+        return  render_template('status_message.html',statment = statment)
+
+    if len(name) > 79:
+        statment = ('The name is too long ,' +
+            '<a href="/catalog/new-category" ' +
+            'style="font-size:39px">Try again here</a>')
+        db.close()
+        return  render_template('status_message.html',statment = statment)
+
+    if db.query(Category).filter_by(name = name.title()).count() > 0:
+        statment = ('A category with the same name already exists ,' +
+            '<a href="/catalog/new-category" ' +
+            'style="font-size:39px">Try again here</a>')
+        db.close()
+        return  render_template('status_message.html',statment = statment)
+
+    new_cat = Category(name = name.title())
+
+    db.add(new_cat)
+
+    db.commit()
+
+    db.close()
+
+    return redirect('/catalog/' + str(name.title()) + '/items')
+
+
 @app.route("/catalog/new-item", methods = ['POST','GET'])
 def new_item():
 
@@ -1337,6 +1419,82 @@ def new_item():
 #______________________________ End CREATE views ______________________________#
 
 #______________________________START UPDATE VIEWS______________________________#
+
+@app.route("/catalog/<string:cat_name>/edit", methods = ['POST','GET'])
+def edit_category(cat_name):
+
+    if 'signed' not in session or not session['signed']:
+        statment = ('Please log in first ,' +
+            '<a href="/login" style="font-size:39px">Log in here</a>')
+        return  render_template('status_message.html',statment = statment)
+
+    category = None
+
+    db = DBSession()
+
+    try:
+        category = db.query(Category).filter_by(name = cat_name).one()
+    except NoResultFound:
+        db.close()
+        return render_template("errors/category_404.html", cat_name = cat_name)
+
+    # if it is a GET request
+    if request.method != 'POST':
+
+        # retreive the required data from the database
+        categories = db.query(Category)
+        top_categories = db.query(Category).order_by(desc(Category.id)).limit(3)
+
+        template = render_template("edit_category.html",
+                               categories=categories,
+                               old_cat=category,
+                               top_categories=top_categories,
+                               user_dict = session['user_data_dict'])
+
+        db.close()
+
+        return template
+
+    if not request.form['name']:
+        response = make_response(json.dumps('Invalid form data.'), 406)
+        response.headers['Content-Type'] = 'application/json'
+        db.close()
+        return response
+
+    name = request.form['name']
+
+    if name.title() != category.name:
+
+        if len(name) < 1:
+            statment = ('Please enter a name ,' +
+                '<a href="/catalog/' + str(category.name) + '/edit" ' +
+                'style="font-size:39px">Try again here</a>')
+            db.close()
+            return  render_template('status_message.html',statment = statment)
+
+        if len(name) > 79:
+            statment = ('The name is too long ,' +
+                '<a href="/catalog/' + str(category.name) + '/edit" ' +
+                'style="font-size:39px">Try again here</a>')
+            db.close()
+            return  render_template('status_message.html',statment = statment)
+
+        if db.query(Category).filter_by(name = name.title()).count() > 0 :
+            statment = ('A category with the same name already exists ,' +
+                '<a href="/catalog/' + str(category.name) + '/edit" ' +
+                'style="font-size:39px">Try again here</a>')
+            db.close()
+            return  render_template('status_message.html',statment = statment)
+
+    category.name = name.title()
+
+    db.add(category)
+
+    db.commit()
+
+    db.close()
+
+    return redirect('/catalog/' + str(name.title()) + '/items')
 
 @app.route("/catalog/<string:cat_name>/<string:item_name>/edit", methods = ['POST','GET'])
 def edit_item(cat_name, item_name):
@@ -1385,8 +1543,6 @@ def edit_item(cat_name, item_name):
 
     # if it is a GET request
     if request.method != 'POST':
-
-        db = DBSession()
 
         # retreive the required data from the database
         categories = db.query(Category)
