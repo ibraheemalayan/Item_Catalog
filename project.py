@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # TODO Checklist
-# make the json endpoints for every page on post methods
 # make a README.md (copy it from logs analysis project)
 # documenate your code
 # Follow PEP 8
@@ -462,9 +461,6 @@ def update_password(email):
 #_______________________ Start Password recovery views ________________________#
 #_________________________ Start internal login view __________________________#
 
-#TODO Limit user requests per minute
-#TODO style the 404 templates
-
 # receives post request from the main login page
 @app.route("/internal_login", methods = ['POST'])
 def internal_login():
@@ -474,7 +470,6 @@ def internal_login():
         session['signed'] = False
     if session['signed']:
         revoke()
-#TODO turn all links in html to full
     # checks the post request body data form
     if 'email' not in request.form or 'password' not in request.form:
         response = make_response(json.dumps('Invalid form data.'), 406)
@@ -955,13 +950,12 @@ def view_category_items(cat_name):
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/category_404.html", cat_name=cat_name)
+        statment = ('🙁 looks like we don\'t have a category with the name "' +
+            cat_name + '" . <br> But you can <a href="/catalog/new-category"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
-    try:
-        items = db.query(Item).filter_by(cat_id = category.id)
-    except NoResultFound:
-        db.close()
-        return render_template("errors/category_empty.html", cat_name=cat_name)
+    items = db.query(Item).filter_by(cat_id = category.id)
 
     if 'signed' not in session:
         session['signed'] = False
@@ -1009,16 +1003,22 @@ def view_item(cat_name, item_name):
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/category_404.html", cat_name = cat_name)
+        statment = ('🙁 looks like we don\'t have a category with the name "' +
+            cat_name + '" . <br> But you can <a href="/catalog/new-category"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     try:
         item = db.query(Item).filter_by(
                                 cat_id = category.id, title = item_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/item_404.html",
-                                cat_name = cat_name,
-                                item_name = item_name)
+        statment = ('🙁 looks like we don\'t have an item with the name "' +
+            item_name + '" in the category "' + cat_name +
+            '". <br> But you can <a href="/catalog/new-item"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
+
 
     author = db.query(User).filter_by(id = item.author_id).one()
 
@@ -1098,7 +1098,10 @@ def category_json(cat_name):
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/category_404.html", cat_name = cat_name)
+        statment = ('🙁 looks like we don\'t have a category with the name "' +
+            cat_name + '" . <br> But you can <a href="/catalog/new-category"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     result_dict = {}
 
@@ -1135,13 +1138,20 @@ def item_json(cat_name, item_name):
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/category_404.html", cat_name = cat_name)
+        statment = ('🙁 looks like we don\'t have a category with the name "' +
+            cat_name + '" . <br> But you can <a href="/catalog/new-category"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     try:
         item = db.query(Item).filter_by(title = item_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/item_404.html", cat_name = cat_name)
+        statment = ('🙁 looks like we don\'t have an item with the name "' +
+            item_name + '" in the category "' + cat_name +
+            '". <br> But you can <a href="/catalog/new-item"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     result_dict = {}
 
@@ -1158,7 +1168,6 @@ def item_json(cat_name, item_name):
 
 #_______________________________ End READ views _______________________________#
 #_____________________________ Start DELELTE views ____________________________#
-#TODO complete those CRUD opreations
 
 @app.route("/catalog/<string:cat_name>/<string:item_name>/delete/<int:confirm>")
 @app.route("/catalog/<string:cat_name>/<string:item_name>/delete")
@@ -1182,16 +1191,21 @@ def delete_item(cat_name, item_name, confirm = 0):
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/category_404.html", cat_name = cat_name)
+        statment = ('🙁 looks like we don\'t have a category with the name "' +
+            cat_name + '" . <br> But you can <a href="/catalog/new-category"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     try:
         item = db.query(Item).filter_by(
                                 cat_id = category.id, title = item_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/item_404.html",
-                                cat_name = cat_name,
-                                item_name = item_name)
+        statment = ('🙁 looks like we don\'t have an item with the name "' +
+            item_name + '" in the category "' + cat_name +
+            '". <br> But you can <a href="/catalog/new-item"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     author = db.query(User).filter_by(id = item.author_id).one()
 
@@ -1216,7 +1230,7 @@ def delete_item(cat_name, item_name, confirm = 0):
                                 top_categories = top_categories )
         db.close()
         return template
-#TODO add author name for every item
+
     db.delete(item)
     db.commit()
     db.close()
@@ -1247,7 +1261,10 @@ def delete_category(cat_name, confirm = 0):
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/category_404.html", cat_name = cat_name)
+        statment = ('🙁 looks like we don\'t have a category with the name "' +
+            cat_name + '" . <br> But you can <a href="/catalog/new-category"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
     try:
         items = db.query(Item).filter_by(cat_id = category.id)
     except NoResultFound:
@@ -1520,7 +1537,10 @@ def edit_category(cat_name):
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/category_404.html", cat_name = cat_name)
+        statment = ('🙁 looks like we don\'t have a category with the name "' +
+            cat_name + '" . <br> But you can <a href="/catalog/new-category"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     # if it is a GET request
     if request.method != 'POST':
@@ -1597,16 +1617,21 @@ def edit_item(cat_name, item_name):
         category = db.query(Category).filter_by(name = cat_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/category_404.html", cat_name = cat_name)
+        statment = ('🙁 looks like we don\'t have a category with the name "' +
+            cat_name + '" . <br> But you can <a href="/catalog/new-category"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     try:
         item = db.query(Item).filter_by(
                                 cat_id = category.id, title = item_name).one()
     except NoResultFound:
         db.close()
-        return render_template("errors/item_404.html",
-                                cat_name = cat_name,
-                                item_name = item_name)
+        statment = ('🙁 looks like we don\'t have an item with the name "' +
+            item_name + '" in the category "' + cat_name +
+            '". <br> But you can <a href="/catalog/new-item"' +
+            ' style="font-size:39px">Create your own 😃</a>')
+        return  render_template('status_message.html',statment = statment)
 
     author = db.query(User).filter_by(id = item.author_id).one()
 
