@@ -90,6 +90,7 @@ To automatically install all required dependencies run the following commands in
 ### Installing the project
 run the following command in the directory you want to setup the project in
 >     git clone https://github.com/ibraheemalayan/Item_Catalog.git  
+>     cd Item_Catalog
 >     pip3 install -r requirements.txt 
 
 ### setting up the database
