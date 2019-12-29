@@ -91,7 +91,8 @@ To automatically install all required dependencies run the following commands in
 run the following command in the directory you want to setup the project in
 >     git clone https://github.com/ibraheemalayan/Item_Catalog.git  
 >     cd Item_Catalog
->     pip3 install -r requirements.txt 
+>     pip3 install -r requirements.txt
+you may get errors installing hashlib using pip, if you got errors please remove hashlib from the requirments.txt file and rerun the above command then intall hashlib using another installer like easy_install 
 
 ### setting up the database
 Run the following commands to setup the database and fill it with a sample data
