@@ -84,13 +84,13 @@ _______________________
 
 ### Installing required libraries
 To automatically install all required dependencies run the following commands in a bash shell in the project main directory
->     sudo apt-get install python3-pip  
->     pip3 install -r requirements.txt  
+>     sudo apt-get install python3-pip   
 >     sudo apt install git  
 
 ### Installing the project
 run the following command in the directory you want to setup the project in
 >     git clone https://github.com/ibraheemalayan/Item_Catalog.git  
+>     pip3 install -r requirements.txt 
 
 ### setting up the database
 Run the following commands to setup the database and fill it with a sample data
