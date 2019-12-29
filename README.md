@@ -84,9 +84,9 @@ _______________________
 
 ### Installing required libraries
 To automatically install all required dependencies run the following commands in a bash shell in the project main directory
->    sudo apt-get install python3-pip  
->    pip3 install -r requirements.txt  
->    sudo apt install git  
+>     sudo apt-get install python3-pip  
+>     pip3 install -r requirements.txt  
+>     sudo apt install git  
 
 ### Installing the project
 run the following command in the directory you want to setup the project in
@@ -94,14 +94,14 @@ run the following command in the directory you want to setup the project in
 
 ### setting up the database
 Run the following commands to setup the database and fill it with a sample data
->    python3 database_setup.py  
->    python3 Fill_DB.py  
+>     python3 database_setup.py  
+>     python3 Fill_DB.py  
 
  * now you have a SQLite database file named " Item_Catalog.db "
 
 ### Running the Project
 to start the main python script to run the server just enter the following command
->    python3 project.py  
+>     python3 project.py  
 _______________________
 ## Testing
 to visit the website just open up your browser and go to the following link
@@ -109,8 +109,8 @@ to visit the website just open up your browser and go to the following link
 you may get a warning because the website uses SSL without a valid certification to skip this (in most browsers) click advanced then proceed to localhost
 
 ### Notes
-* the project is shipped debug mode on , but you can still turn off the debugging mode by replacing line 1733 with the following
- > app.debug = True  
+* the project is shipped debug mode on , but you can still turn off the debugging mode by replacing line 1733 with the following  
+>     app.debug = True  
 
 * the project uses https because Facebook login doesn't support plain http
 
