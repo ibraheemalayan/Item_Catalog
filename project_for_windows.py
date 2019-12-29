@@ -882,7 +882,7 @@ def revoke():
 @app.route('/css/<string:path>')
 def get_css(path):
     try:
-        return send_file(('templates/css/' + str(path)))
+        return send_file(('templates\\css\\' + str(path).replace('/', '\\')))
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
@@ -891,7 +891,7 @@ def get_css(path):
 @app.route('/js/<string:path>')
 def get_js(path):
     try:
-        return send_file(('templates/s/' + str(path)))
+        return send_file(('templates\\js\\' + str(path).replace('/', '\\')))
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
@@ -900,7 +900,7 @@ def get_js(path):
 @app.route('/img/<string:path>')
 def get_img(path):
     try:
-        return send_file(('templates/img/' + str(path)))
+        return send_file(('templates\\img\\' + str(path).replace('/', '\\')))
     except FileNotFoundError as e:
         print(e)
         return make_response("FileNotFoundError", 404)
@@ -910,7 +910,7 @@ def get_img(path):
 @app.route('/fonts/<string:path>')
 def get_fonts(path):
     try:
-        return send_file(('templates/fonts/' + str(path)))
+        return send_file(('templates\\fonts\\' + str(path).replace('/', '\\')))
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
@@ -1730,7 +1730,7 @@ def edit_item(cat_name, item_name):
 # Run the server (over SSL) on localhost port 5000
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
-
+    
     app.debug = True
     # facebook login works only over https
     app.run(host='0.0.0.0', port=5000, ssl_context='adhoc')

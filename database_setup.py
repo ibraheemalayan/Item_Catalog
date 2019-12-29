@@ -61,7 +61,7 @@ class Item(Base):
             'item_title':          self.title,
             'item_id':             self.id,
             'category_id':         self.cat_id,
-            'author_id': '         self.author_id
+            'author_id':           self.author_id
         }
 
     @property
@@ -71,7 +71,7 @@ class Item(Base):
             'item_title':          self.title,
             'item_id':             self.id,
             'category_id':         self.cat_id,
-            'author_id': '         self.author_id,
+            'author_id':           self.author_id,
             'description':         self.description
         }
 
