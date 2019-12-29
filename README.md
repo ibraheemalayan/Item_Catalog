@@ -112,6 +112,11 @@ you may get a warning because the website uses SSL without a valid certification
 * the project is shipped debug mode on , but you can still turn off the debugging mode by replacing line 1733 with the following
  > app.debug = True
 
- * the project uses https because Facebook login doesn't support plain http
+* the project uses https because Facebook login doesn't support plain http
+
+* for easier testing ,if you use the sample data you can use one of those 3 accounts to login to the site :
+  > email="m.h123@sis.com" / password="12PassCode34@Dunno"
+  > email="ibraheemalayan@gmail.com" / password="Mary@ItemCata321"
+  > email="sami.Rn@twio.edu" / password="SsAaMmIi40.50"
 
 ## HOPE it works with you ...
