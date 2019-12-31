@@ -104,6 +104,7 @@ Run the following commands to setup the database and fill it with a sample data
 ### Running the Project
 to start the main python script to run the server just enter the following command
 >     python3 project.py  
+to visit the website from your host device just setup a port forwarding from port 5000 on the host to port 5000 on the guest os (for more https://www.howtogeek.com/122641/how-to-forward-ports-to-a-virtual-machine-and-use-it-as-a-server/)
 _______________________
 ## Testing
 to visit the website just open up your browser and go to the following link
