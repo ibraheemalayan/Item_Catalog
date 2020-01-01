@@ -7,22 +7,22 @@
 
 @font-face {
   font-family: Poppins-Regular;
-  src: url('https://localhost:5000/fonts/Poppins-Regular.ttf');
+  src: url('https://3.124.200.75:5000/fonts/Poppins-Regular.ttf');
 }
 
 @font-face {
   font-family: Poppins-Medium;
-  src: url('https://localhost:5000/fonts/Poppins-Medium.ttf');
+  src: url('https://3.124.200.75:5000/fonts/Poppins-Medium.ttf');
 }
 
 @font-face {
   font-family: Montserrat-Medium;
-  src: url('https://localhost:5000/fonts/Montserrat-Medium.ttf');
+  src: url('https://3.124.200.75:5000/fonts/Montserrat-Medium.ttf');
 }
 
 @font-face {
   font-family: Montserrat-SemiBold;
-  src: url('https://localhost:5000/fonts/Montserrat-SemiBold.ttf');
+  src: url('https://3.124.200.75:5000/fonts/Montserrat-SemiBold.ttf');
 }
 
 /*//////////////////////////////////////////////////////////////////
