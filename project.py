@@ -891,7 +891,7 @@ def get_css(path):
 @app.route('/js/<string:path>')
 def get_js(path):
     try:
-        return send_file(('templates/s/' + str(path)))
+        return send_file(('templates/js/' + str(path)))
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
