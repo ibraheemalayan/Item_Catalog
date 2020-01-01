@@ -6,14 +6,14 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<!--===============================================================================================-->
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-	<script src="https://3.124.200.75:5000/js/FB_Login_Script.js" charset="utf-8" defer></script>
+	<script src="https://3.124.200.75.xip.io/js/FB_Login_Script.js" charset="utf-8" defer></script>
 	<!--===============================================================================================-->
-	<link rel="stylesheet" type="text/css" href="https://3.124.200.75:5000/css/login_util.css">
-	<link rel="stylesheet" type="text/css" href="https://3.124.200.75:5000/css/login_style.css">
+	<link rel="stylesheet" type="text/css" href="https://3.124.200.75.xip.io/css/login_util.css">
+	<link rel="stylesheet" type="text/css" href="https://3.124.200.75.xip.io/css/login_style.css">
 </head>
 <body>
 	<div class="limiter">
-		<div class="container-login100" style="background-image: url('https://3.124.200.75:5000/img/bg-02.jpg');">
+		<div class="container-login100" style="background-image: url('https://3.124.200.75.xip.io/img/bg-02.jpg');">
 			<div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
 				<form class="login100-form validate-form flex-sb flex-w" action="{{ url_for('internal_login', _external = True ) }}" method="post">
 					<span class="login100-form-title p-b-53">
@@ -21,12 +21,12 @@
 					</span>
 
 					<a id="fb-root" href="#" onclick="fb_login();" class="btn-face m-b-20" style="text-decoration:none">
-						<img src="https://3.124.200.75:5000/img/facebook-icon.png" alt="FaceBook" width=50px style="margin-right:15px">
+						<img src="https://3.124.200.75.xip.io/img/facebook-icon.png" alt="FaceBook" width=50px style="margin-right:15px">
 						Facebook
 					</a>
 
 					<a href="{{ url_for('google_authorize', _external = True ) }}" class="btn-google m-b-20" style="text-decoration:none">
-						<img src="https://3.124.200.75:5000/img/icon-google.png" alt="GOOGLE">
+						<img src="https://3.124.200.75.xip.io/img/icon-google.png" alt="GOOGLE">
 						Google
 					</a>
 
