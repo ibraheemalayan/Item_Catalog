@@ -22,7 +22,7 @@ import requests
 sys.stdout = open('/home/ubuntu/output.log','a')
 
 # Files Main Directory
-MD = '/var/www/flosky/'
+MD = '/var/www/Item_Catalog/'
 
 app = Flask(__name__, template_folder=(MD + '/templates'))
 
