@@ -21,6 +21,9 @@ import requests
 
 sys.stdout = open('/home/ubuntu/output.log','a')
 
+# Files Main Directory
+MD = '/var/www/flosky/'
+
 app = Flask(__name__, template_folder=(MD + '/templates'))
 
 # Connect to Database
@@ -42,9 +45,6 @@ engine = create_engine('postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(use
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
-
-# Files Main Directory
-MD = '/var/www/flosky/'
 
 # Google things
 CLIENT_SECRETS_FILE = MD + "client_secret.json"
