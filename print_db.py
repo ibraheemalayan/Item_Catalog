@@ -18,7 +18,7 @@ POSTGRES_PW = 'Grader@098'
 POSTGRES_DB = 'item_catalog'
 
 # Connect to Database and create database sessionmaker (DBSession)
-engine = create_engine('postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=POSTGRES_USER,pw=POSTGRES_PW,url=POSTGRES_URL,db=POSTGRES_DB))
+engine = create_engine('postgresql://{user}:{pw}@{url}/{db}'.format(user=POSTGRES_USER,pw=POSTGRES_PW,url=POSTGRES_URL,db=POSTGRES_DB))
 Base.metadata.create_all(engine)
 
 DBSession = sessionmaker(bind=engine)
