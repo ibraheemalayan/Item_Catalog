@@ -19,7 +19,7 @@ import json
 import hashlib
 import requests
 
-sys.stdout = open('/home/ubuntu/output.log','w')
+sys.stdout = open('/home/ubuntu/output.log','a')
 
 app = Flask(__name__, template_folder=(MD + '/templates'))
 
@@ -1753,4 +1753,4 @@ if __name__ == '__main__':
 
     app.debug = True
     # facebook login works only over https
-    app.run(host='0.0.0.0', port = 443, ssl_context='adhoc')
+    app.run()
