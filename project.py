@@ -14,11 +14,14 @@ import string
 import flask
 import datetime
 import os
+import sys
 import json
 import hashlib
 import requests
 
-app = Flask(__name__)
+sys.stdout = open('/home/ubuntu/output.log','w')
+
+app = Flask(__name__, template_folder=(MD + '/templates'))
 
 # Connect to Database
 def get_env_variable(name):
@@ -40,8 +43,11 @@ Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 
+# Files Main Directory
+MD = '/var/www/flosky/'
+
 # Google things
-CLIENT_SECRETS_FILE = "client_secret.json"
+CLIENT_SECRETS_FILE = MD + "client_secret.json"
 SCOPES = ['email', 'openid', 'profile']
 API_SERVICE_NAME = 'cloudidentity'
 API_VERSION = 'v1'
@@ -51,7 +57,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
 
 # FaceBook things
-FB_CLIENT_SECRETS_FILE = "fb_client_secrets.json"
+FB_CLIENT_SECRETS_FILE = MD + "fb_client_secrets.json"
 FB_APP_ID = json.loads(
               open(FB_CLIENT_SECRETS_FILE, 'r').read())['web']['app_id']
 FB_APP_SECRET = json.loads(
@@ -896,7 +902,7 @@ def revoke():
 @app.route('/css/<string:path>')
 def get_css(path):
     try:
-        return send_file(('templates/css/' + str(path)))
+        return send_file((MD + 'templates/css/' + str(path)))
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
@@ -905,7 +911,7 @@ def get_css(path):
 @app.route('/js/<string:path>')
 def get_js(path):
     try:
-        return send_file(('templates/js/' + str(path)))
+        return send_file((MD + 'templates/js/' + str(path)))
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
@@ -914,7 +920,7 @@ def get_js(path):
 @app.route('/img/<string:path>')
 def get_img(path):
     try:
-        return send_file(('templates/img/' + str(path)))
+        return send_file((MD + 'templates/img/' + str(path)))
     except FileNotFoundError as e:
         print(e)
         return make_response("FileNotFoundError", 404)
@@ -924,7 +930,7 @@ def get_img(path):
 @app.route('/fonts/<string:path>')
 def get_fonts(path):
     try:
-        return send_file(('templates/fonts/' + str(path)))
+        return send_file((MD + 'templates/fonts/' + str(path)))
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
