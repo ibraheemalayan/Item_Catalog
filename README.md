@@ -111,6 +111,10 @@ to visit the website just open up your browser and go to the following link
 ### https://localhost:5000/  
 you may get a warning because the website uses SSL without a valid certification to skip this (in most browsers) click advanced then proceed to localhost
 
+### Facebook Test User
+email : udacity_sighkxm_grader@tfbnw.net
+password : Grader@098
+
 ### Notes
 * the project is shipped debug mode on , but you can still turn off the debugging mode by replacing line 1733 with the following  
 >     app.debug = True  
