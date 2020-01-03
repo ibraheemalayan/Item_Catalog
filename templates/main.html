@@ -11,13 +11,13 @@
 		<link href="https://fonts.googleapis.com/css?family=Nunito+Sans:700%7CNunito:300,600" rel="stylesheet">
 
 		<!-- Bootstrap -->
-		<link type="text/css" rel="stylesheet" href="http://3.124.200.75.xip.io/css/bootstrap.min.css"/>
+		<link type="text/css" rel="stylesheet" href="https://3.124.200.75.xip.io/css/bootstrap.min.css"/>
 
 		<!-- Font Awesome Icon -->
-		<link rel="stylesheet" href="http://3.124.200.75.xip.io/css/font-awesome.min.css">
+		<link rel="stylesheet" href="https://3.124.200.75.xip.io/css/font-awesome.min.css">
 
 		<!-- Custom stlylesheet -->
-		<link type="text/css" rel="stylesheet" href="http://3.124.200.75.xip.io/css/style.css"/>
+		<link type="text/css" rel="stylesheet" href="https://3.124.200.75.xip.io/css/style.css"/>
 
     </head>
 	<body>
@@ -32,10 +32,10 @@
 
 						<!-- nav -->
 						<ul class="nav-menu nav navbar-nav">
-							<li><a href="http://3.124.200.75.xip.io/">Home</a></li>
+							<li><a href="https://3.124.200.75.xip.io/">Home</a></li>
 							<li id="sep"> Hottest <br> Categories </li>
 							{% for c in top_categories %}
-							<li class="cat-{{ ((c.id + 2 ) % 4) + 1 }}"><a href="{{ 'http://3.124.200.75.xip.io/catalog/' + c.name + '/items' }}">{{ c.name }}</a></li>
+							<li class="cat-{{ ((c.id + 2 ) % 4) + 1 }}"><a href="{{ 'https://3.124.200.75.xip.io/catalog/' + c.name + '/items' }}">{{ c.name }}</a></li>
 							{% endfor %}
               {% if not user_dict %}
               <li><a href="{{ url_for('internal_sign_up', _external = True ) }}" class="btn green" style="padding:12px 15px 12px 15px;">Sign up</a></li>
@@ -77,7 +77,7 @@
 						<div class="post">
 							<div class="post-body">
 								<div class="post-meta">
-									<a class="post-category cat-{{ ((c.id + 2 ) % 4) + 1 }}" href="{{ 'http://3.124.200.75.xip.io/catalog/' + c.name + '/items' }}">{{ c.name }}</a>
+									<a class="post-category cat-{{ ((c.id + 2 ) % 4) + 1 }}" href="{{ 'https://3.124.200.75.xip.io/catalog/' + c.name + '/items' }}">{{ c.name }}</a>
 								</div>
 							</div>
 						</div>
@@ -91,7 +91,7 @@
 						<div class="post">
 							<div class="post-body">
 								<div class="post-meta">
-									<a class="post-category" href="http://3.124.200.75.xip.io/catalog/new-category"> + Add </a>
+									<a class="post-category" href="https://3.124.200.75.xip.io/catalog/new-category"> + Add </a>
 								</div>
 							</div>
 						</div>
@@ -110,7 +110,7 @@
 			<div class="container">
 				<!-- row -->
 							<ul class="footer-nav">
-								<li><a href="http://3.124.200.75.xip.io/">Item Cataolg</a></li>
+								<li><a href="https://3.124.200.75.xip.io/">Item Cataolg</a></li>
 							</ul>
 							<div class="post-body">
 								This Website was made by Ibraheem Alyan
