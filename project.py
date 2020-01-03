@@ -83,7 +83,7 @@ def credentials_to_dict(credentials):
 
 # new user
 def createUser(session, db, close_db=True):
-    newUser = UU(name=session['user_data_dict']['name'],
+    newUser = User(name=session['user_data_dict']['name'],
                  email=session['user_data_dict']['email'],
                  picture=session['user_data_dict']['picture'])
     db.add(newUser)
