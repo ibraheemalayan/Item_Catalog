@@ -82,12 +82,12 @@ If you reboot your computer, you will need to run vagrant up to restart the VM
 _______________________
 ## Project Setup
 
-### Installing required libraries
+### Installing required tools
 To automatically install all required dependencies run the following commands in a bash shell in the project main directory
 >     sudo apt-get install python3-pip   
 >     sudo apt install git  
 
-### Installing the project
+### Installing the project and it's requirments
 run the following command in the directory you want to setup the project in
 >     git clone https://github.com/ibraheemalayan/Item_Catalog.git  
 >     cd Item_Catalog
@@ -116,8 +116,8 @@ email : udacity_sighkxm_grader@tfbnw.net
 password : Grader@098
 
 ### Notes
-* the project is shipped debug mode on , but you can still turn off the debugging mode by replacing line 1733 with the following  
->     app.debug = True  
+* the project is shipped with debug mode on , but you still can turn off the debugging mode by replacing line 1733 with the following  
+>     app.debug = False  
 
 * the project uses https because Facebook login doesn't support plain http
 
