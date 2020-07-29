@@ -20,6 +20,9 @@ import requests
 
 app = Flask(__name__)
 
+server_url = "https://127.0.0.1:443/"
+# server_url = "https://3.124.200.75.xip.io/"
+
 # Connect to Database and create database sessionmaker (DBSession)
 engine = create_engine('sqlite:///Item_Catalog.db')
 Base.metadata.bind = engine
@@ -63,7 +66,7 @@ def credentials_to_dict(credentials):
 
 # new user
 def createUser(session, db, close_db=True):
-    newUser = UU(name=session['user_data_dict']['name'],
+    newUser = User(name=session['user_data_dict']['name'],
                  email=session['user_data_dict']['email'],
                  picture=session['user_data_dict']['picture'])
     db.add(newUser)
@@ -221,7 +224,8 @@ def get_google_user_info():
         if session['provider'] == 'Google':
             return redirect('google_authorize')
         else:
-            return revoke('/get_google_user_info')
+            session['redirect_uri_post_revoke'] = '/get_google_user_info'
+            return revoke()
 
     # Load credentials from the session.
     credentials = google.oauth2.credentials.Credentials(
@@ -348,7 +352,7 @@ def login():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in range(32))
     session['state'] = state
-    response = make_response(render_template("login.html"))
+    response = make_response(render_template("login.html", server_url=server_url))
     response.set_cookie('state', state)
     return response
 
@@ -359,7 +363,7 @@ def login():
 # returns the 'enter email' form template
 @app.route("/password-recovery")
 def password_recovery():
-    return render_template('password_rec_email.html')
+    return render_template('password_rec_email.html', server_url=server_url)
 
 
 # handle the email input from the previouse view template
@@ -381,7 +385,7 @@ def validate_recovery_email():
     if not getUserID(email, db, False):
         statment = ('invalid email, <a href="/login"' +
                     ' style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # retreive the user from the database
     user = getUserDBInfo(getUserID(email, db, False), db, False)
@@ -391,7 +395,8 @@ def validate_recovery_email():
     # return the security question template
     return render_template('password_rec.html',
                            email=user.email,
-                           sec_q=user.sec_q)
+                           sec_q=user.sec_q,
+                           server_url=server_url)
 
 
 # handles the security question's answer given by the user
@@ -420,17 +425,17 @@ def update_password(email):
     if len(new_password) < 1:
         statment = ('Please enter a password, ' +
                     '<a href="/login" style="font-size:39px">Try again</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(new_password) > 65:
         statment = ('Password is too long, ' +
                     '<a href="/login" style="font-size:39px">Try again</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(new_password) < 8:
         statment = ('Password is too short, ' +
                     '<a href="/login" style="font-size:39px">Try again</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
     db = DBSession()
 
     # retreive the user from the database
@@ -438,7 +443,7 @@ def update_password(email):
         statment = ('invalid email, ' +
                     '<a href="/login" style="font-size:39px">Try again</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     user = getUserDBInfo(getUserID(email, db, False), db, False)
 
@@ -460,13 +465,13 @@ def update_password(email):
         # return status template shows the success
         statment = ('Password was updated successfully, <a href="/login" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # if answer is incorrect return status template shows the result
     db.close()
     statment = ('Security answer is incorrect, ' +
                 '<a href="/login" style="font-size:39px">Try again here</a>')
-    return render_template('status_message.html', statment=statment)
+    return render_template('status_message.html', statment=statment, server_url=server_url)
 
 # ______________________ Start Password recovery views _______________________#
 # ________________________ Start internal login view _________________________#
@@ -494,7 +499,7 @@ def internal_login():
     if len(email) < 1:
         statment = ('Please enter an email, <a href="/login"' +
                     ' style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     user = None
 
@@ -502,7 +507,7 @@ def internal_login():
     if not getUserID(email, DBSession()):
         statment = ('invalid email, <a href="/login"' +
                     ' style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     user = getUserDBInfo(getUserID(email, DBSession()), DBSession())
 
@@ -515,13 +520,13 @@ def internal_login():
           '<br>Or<br> head to ' +
           '<a href="/sign_up" style="font-size:39px">Sign up Form</a>' +
           ' to create an internal account')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # validate password
     if len(password) < 1:
         statment = ('Please enter a password, <a href="/login" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # hash the given password
     hasher = hashlib.sha256()
@@ -532,7 +537,7 @@ def internal_login():
     if user.password_hash != hashed_password:
         statment = ('incorrect password, <a href="/login"' +
                     ' style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # after success of the above operations,
     # we save the user info in the session and check that the user is logged
@@ -559,7 +564,7 @@ def internal_sign_up():
 
     # if it is a GET request
     if request.method != 'POST':
-        return render_template("sign_up.html")
+        return render_template("sign_up.html", server_url=server_url)
 
     # check the post request body data form
     if not (request.form and
@@ -588,85 +593,85 @@ def internal_sign_up():
     if len(name) < 1:
         statment = ('Please enter a name, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(email) < 1:
         statment = ('Please enter an email, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(verify_email) < 1:
         statment = ('Please confirm your email, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(password) < 1:
         statment = ('Please enter a password, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(verify_password) < 1:
         statment = ('Please confirm your password, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(sec_q) < 1:
         statment = ('Please enter a security question, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(sec_a) < 1:
         statment = ('Please enter an answer for the security question, ' +
                     '<a href="/sign_up" style="font-size:39px">' +
                     'Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(name) > 249:
         statment = ('Name is too long, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(pic_url) > 499:
         statment = ('picture URL is too long, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if email != verify_email:
         statment = ('Confirm email doesn\'t equal the first email, ' +
                     '<a href="/sign_up" style="font-size:39px">' +
                     'Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(email) > 99:
         statment = ('Email is too long , <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(password) > 65:
         statment = ('Password is too long, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(password) < 8:
         statment = ('Password is too short, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if password != verify_password:
         statment = ('Confirm password doesn\'t equal the first password, ' +
                     '<a href="/sign_up" style="font-size:39px">' +
                     'Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(sec_q) > 99:
         statment = ('security question is too long, <a href="/sign_up" ' +
                     'style="font-size:39px">Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(sec_a) > 99:
         statment = ('security answer is too long,<a href="/sign_up" ' +
                     'style="font-size:39px"> Try again here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(pic_url) < 10:
         pic_url = 'http://cdn.onlinewebfonts.com/svg/img_513928.png'
@@ -691,7 +696,7 @@ def internal_sign_up():
                         '<br><a href="/sign_up" style="font-size:39px">' +
                         'Try again here</a> Or <a href="/login" ' +
                         'style="font-size:39px">Log in here</a>')
-            return render_template('status_message.html', statment=statment)
+            return render_template('status_message.html', statment=statment, server_url=server_url)
 
         # here the user has an account but not with the internal login system
         # a google or a facebook account (foreign account)
@@ -729,7 +734,7 @@ def internal_sign_up():
             ', <a href="/sign_up" style="font-size:39px">Try again here</a>' +
             ' Or <a href="/login" style="font-size:39px">Log in here</a>')
 
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # Add the user to the data base
 
@@ -882,7 +887,7 @@ def revoke():
 @app.route('/css/<string:path>')
 def get_css(path):
     try:
-        return send_file(('templates/css/' + str(path)))
+        return send_file( os.path.join( "templates", "css", str(path) ) )
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
@@ -891,7 +896,7 @@ def get_css(path):
 @app.route('/js/<string:path>')
 def get_js(path):
     try:
-        return send_file(('templates/js/' + str(path)))
+        return send_file( os.path.join( "templates", "js", str(path) ) )
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
@@ -900,7 +905,7 @@ def get_js(path):
 @app.route('/img/<string:path>')
 def get_img(path):
     try:
-        return send_file(('templates/img/' + str(path)))
+        return send_file( os.path.join( "templates", "img", str(path) ) )
     except FileNotFoundError as e:
         print(e)
         return make_response("FileNotFoundError", 404)
@@ -910,7 +915,7 @@ def get_img(path):
 @app.route('/fonts/<string:path>')
 def get_fonts(path):
     try:
-        return send_file(('templates/fonts/' + str(path)))
+        return send_file( os.path.join( "templates", "fonts", str(path) ) )
     except FileNotFoundError:
         return make_response("FileNotFoundError", 404)
 
@@ -945,7 +950,8 @@ def index():
                                    categories=categories,
                                    items=latest_items,
                                    top_categories=top_cats,
-                                   user_dict=session["user_data_dict"])
+                                   user_dict=session["user_data_dict"],
+                                   server_url=server_url)
 
         db.close()
 
@@ -954,7 +960,8 @@ def index():
     template = render_template("index.html",
                                categories=categories,
                                items=latest_items,
-                               top_categories=top_cats)
+                               top_categories=top_cats,
+                               server_url=server_url)
 
     db.close()
 
@@ -983,7 +990,7 @@ def view_category_items(cat_name):
                     cat_name + '" . <br> But you can <a href=' +
                     '"/catalog/new-category" style="font-size:39px">' +
                     'Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     items = db.query(Item).filter_by(cat_id=category.id)
 
@@ -1000,7 +1007,8 @@ def view_category_items(cat_name):
                             edit_url=(str(request.path)[:-6] + "/edit"),
                             top_categories=top_cats,
                             category=category,
-                            user_dict=session["user_data_dict"])
+                            user_dict=session["user_data_dict"],
+                            server_url=server_url)
         db.close()
 
         return template
@@ -1012,7 +1020,8 @@ def view_category_items(cat_name):
                                delete_url=(str(request.path)[:-6] + "/delete"),
                                edit_url=(str(request.path)[:-6] + "/edit"),
                                top_categories=top_cats,
-                               category=category)
+                               category=category,
+                               server_url=server_url)
 
     db.close()
 
@@ -1039,7 +1048,7 @@ def view_item(cat_name, item_name):
                     cat_name + '" . <br> But you can <a href=' +
                     '"/catalog/new-category"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     try:
         item = db.query(Item).filter_by(
@@ -1050,7 +1059,7 @@ def view_item(cat_name, item_name):
                     item_name + '" in the category "' + cat_name +
                     '". <br> But you can <a href="/catalog/new-item"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     author = db.query(User).filter_by(id=item.author_id).one()
 
@@ -1066,7 +1075,8 @@ def view_item(cat_name, item_name):
                                    categories=categories,
                                    author=author,
                                    top_categories=top_cats,
-                                   user_dict=session['user_data_dict'])
+                                   user_dict=session['user_data_dict'],
+                                   server_url=server_url)
 
         db.close()
 
@@ -1079,7 +1089,8 @@ def view_item(cat_name, item_name):
                                edit_url=(str(request.path) + "/edit"),
                                categories=categories,
                                author=author,
-                               top_categories=top_cats,)
+                               top_categories=top_cats,
+                               server_url=server_url)
 
     db.close()
 
@@ -1140,7 +1151,7 @@ def category_json(cat_name):
                     cat_name + '" . <br> But you can <a href=' +
                     '"/catalog/new-category"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     result_dict = {}
 
@@ -1183,7 +1194,7 @@ def item_json(cat_name, item_name):
                     cat_name + '" . <br> But you can <a href=' +
                     '"/catalog/new-category"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     try:
         item = db.query(Item).filter_by(title=item_name).one()
@@ -1193,7 +1204,7 @@ def item_json(cat_name, item_name):
                     item_name + '" in the category "' + cat_name +
                     '". <br> But you can <a href="/catalog/new-item"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     result_dict = {}
 
@@ -1217,7 +1228,7 @@ def delete_item(cat_name, item_name, confrm=0):
     if 'signed' not in session or not session['signed']:
         statment = ('Please log in first, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     db = DBSession()
 
@@ -1236,7 +1247,7 @@ def delete_item(cat_name, item_name, confrm=0):
                     cat_name + '" . <br> But you can <a href=' +
                     '"/catalog/new-category"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     try:
         item = db.query(Item).filter_by(
@@ -1247,7 +1258,7 @@ def delete_item(cat_name, item_name, confrm=0):
                     item_name + '" in the category "' + cat_name +
                     '". <br> But you can <a href="/catalog/new-item"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     author = db.query(User).filter_by(id=item.author_id).one()
 
@@ -1258,7 +1269,7 @@ def delete_item(cat_name, item_name, confrm=0):
         statment = ('Only the item owner can delete it, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if confrm == 0:
         statment = 'Please confirm that you want to delete the item "'
@@ -1268,7 +1279,8 @@ def delete_item(cat_name, item_name, confrm=0):
                                    confirm_url=(str(request.path) + "/1"),
                                    categories=categories,
                                    user_dict=session['user_data_dict'],
-                                   top_categories=top_cats)
+                                   top_categories=top_cats,
+                                   server_url=server_url)
         db.close()
         return template
 
@@ -1278,7 +1290,7 @@ def delete_item(cat_name, item_name, confrm=0):
 
     statment = ('The item was deleted successfully, ' +
                 '<a href="/index" style="font-size:39px">Home page here</a>')
-    return render_template('status_message.html', statment=statment)
+    return render_template('status_message.html', statment=statment, server_url=server_url)
 
 
 # DELETE Category
@@ -1289,7 +1301,7 @@ def delete_category(cat_name, confirm=0):
     if 'signed' not in session or not session['signed']:
         statment = ('Please log in first, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     db = DBSession()
 
@@ -1307,7 +1319,7 @@ def delete_category(cat_name, confirm=0):
                     cat_name + '" . <br> But you can <a href=' +
                     '"/catalog/new-category"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
     try:
         items = db.query(Item).filter_by(cat_id=category.id)
     except NoResultFound:
@@ -1320,7 +1332,8 @@ def delete_category(cat_name, confirm=0):
                                    statment=statment,
                                    confirm_url=(str(request.path) + "/1"),
                                    categories=categories,
-                                   top_categories=top_cats)
+                                   top_categories=top_cats,
+                                   server_url=server_url)
         db.close()
 
         return template
@@ -1334,7 +1347,7 @@ def delete_category(cat_name, confirm=0):
 
     statment = ('The category was deleted successfully, ' +
                 '<a href="/index" style="font-size:39px">Home page here</a>')
-    return render_template('status_message.html', statment=statment)
+    return render_template('status_message.html', statment=statment, server_url=server_url)
 
 # _____________________________ End DELELTE views ____________________________#
 
@@ -1372,28 +1385,28 @@ def validate_item(request, edited_item_id=None):
                     '<a href="' + try_again_url +
                     '" style="font-size:39px">Try again here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(description) < 1:
         statment = ('Please enter a description, ' +
                     '<a href="' + try_again_url +
                     '" style="font-size:39px">Try again here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(title) > 99:
         statment = ('The title is too long, ' +
                     '<a href="' + try_again_url +
                     '" style="font-size:39px">Try again here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(description) > 999:
         statment = ('The description is too long, ' +
                     '<a href="' + try_again_url +
                     '" style="font-size:39px">Try again here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if not edited_item:
         if db.query(Item).filter_by(title=title).count() != 0:
@@ -1401,7 +1414,7 @@ def validate_item(request, edited_item_id=None):
                         '<a href="' + try_again_url +
                         '" style="font-size:39px">Try again here</a>')
             db.close()
-            return render_template('status_message.html', statment=statment)
+            return render_template('status_message.html', statment=statment, server_url=server_url)
 
     else:
         if db.query(Item).filter_by(title=title).count() > 1:
@@ -1409,7 +1422,7 @@ def validate_item(request, edited_item_id=None):
                         '<a href="' + try_again_url +
                         '" style="font-size:39px">Try again here</a>')
             db.close()
-            return render_template('status_message.html', statment=statment)
+            return render_template('status_message.html', statment=statment, server_url=server_url)
 
     item_cat = db.query(Category).filter_by(name=category).one()
 
@@ -1456,7 +1469,7 @@ def new_category():
     if 'signed' not in session or not session['signed']:
         statment = ('Please log in first, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     db = DBSession()
 
@@ -1470,7 +1483,8 @@ def new_category():
         template = render_template("new_category.html",
                                    categories=categories,
                                    top_categories=top_cats,
-                                   user_dict=session['user_data_dict'])
+                                   user_dict=session['user_data_dict'],
+                                   server_url=server_url)
 
         db.close()
 
@@ -1489,21 +1503,21 @@ def new_category():
                     '<a href="/catalog/new-category" ' +
                     'style="font-size:39px">Try again here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if len(name) > 79:
         statment = ('The name is too long, ' +
                     '<a href="/catalog/new-category" ' +
                     'style="font-size:39px">Try again here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if db.query(Category).filter_by(name=name.title()).count() > 0:
         statment = ('A category with the same name already exists, ' +
                     '<a href="/catalog/new-category" ' +
                     'style="font-size:39px">Try again here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     new_cat = Category(name=name.title())
 
@@ -1522,7 +1536,7 @@ def new_item():
     if 'signed' not in session or not session['signed']:
         statment = ('Please log in first, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # if it is a GET request
     if request.method != 'POST':
@@ -1549,7 +1563,8 @@ def new_item():
                                    categories=categories,
                                    current_cat=current_cat,
                                    top_categories=top_cats,
-                                   user_dict=session['user_data_dict'])
+                                   user_dict=session['user_data_dict'],
+                                   server_url=server_url)
 
         db.close()
 
@@ -1567,7 +1582,7 @@ def edit_category(cat_name):
     if 'signed' not in session or not session['signed']:
         statment = ('Please log in first, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     category = None
 
@@ -1581,7 +1596,7 @@ def edit_category(cat_name):
                     cat_name + '" . <br> But you can <a href=' +
                     '"/catalog/new-category"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # if it is a GET request
     if request.method != 'POST':
@@ -1594,7 +1609,8 @@ def edit_category(cat_name):
                                    categories=categories,
                                    old_cat=category,
                                    top_categories=top_cats,
-                                   user_dict=session['user_data_dict'])
+                                   user_dict=session['user_data_dict'],
+                                   server_url=server_url)
 
         db.close()
 
@@ -1615,21 +1631,21 @@ def edit_category(cat_name):
                         '<a href="/catalog/' + str(category.name) + '/edit" ' +
                         'style="font-size:39px">Try again here</a>')
             db.close()
-            return render_template('status_message.html', statment=statment)
+            return render_template('status_message.html', statment=statment, server_url=server_url)
 
         if len(name) > 79:
             statment = ('The name is too long, ' +
                         '<a href="/catalog/' + str(category.name) + '/edit" ' +
                         'style="font-size:39px">Try again here</a>')
             db.close()
-            return render_template('status_message.html', statment=statment)
+            return render_template('status_message.html', statment=statment, server_url=server_url)
 
         if db.query(Category).filter_by(name=name.title()).count() > 0:
             statment = ('A category with the same name already exists, ' +
                         '<a href="/catalog/' + str(category.name) + '/edit" ' +
                         'style="font-size:39px">Try again here</a>')
             db.close()
-            return render_template('status_message.html', statment=statment)
+            return render_template('status_message.html', statment=statment, server_url=server_url)
 
     category.name = name.title()
 
@@ -1649,7 +1665,7 @@ def edit_item(cat_name, item_name):
     if 'signed' not in session or not session['signed']:
         statment = ('Please log in first, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     category = None
     item = None
@@ -1664,7 +1680,7 @@ def edit_item(cat_name, item_name):
                     cat_name + '" . <br> But you can <a href=' +
                     '"/catalog/new-category"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     try:
         item = db.query(Item).filter_by(
@@ -1675,7 +1691,7 @@ def edit_item(cat_name, item_name):
                     item_name + '" in the category "' + cat_name +
                     '". <br> But you can <a href="/catalog/new-item"' +
                     ' style="font-size:39px">Create your own 😃</a>')
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     author = db.query(User).filter_by(id=item.author_id).one()
 
@@ -1686,13 +1702,13 @@ def edit_item(cat_name, item_name):
         statment = ('Only the item owner can delete it, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     if session['user_data_dict']['email'] != author.email:
         statment = ('Only the item owner can edit it, ' +
                     '<a href="/login" style="font-size:39px">Log in here</a>')
         db.close()
-        return render_template('status_message.html', statment=statment)
+        return render_template('status_message.html', statment=statment, server_url=server_url)
 
     # if it is a GET request
     if request.method != 'POST':
@@ -1706,7 +1722,8 @@ def edit_item(cat_name, item_name):
                                    current_cat=category,
                                    old_item=item,
                                    top_categories=top_cats,
-                                   user_dict=session['user_data_dict'])
+                                   user_dict=session['user_data_dict'],
+                                   server_url=server_url)
 
         db.close()
 
